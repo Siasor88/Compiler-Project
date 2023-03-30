@@ -15,8 +15,8 @@ class TokenType(Enum):
 regexes = {
     TokenType.COMMENT: r'\/\*.*\*\/',
     TokenType.NUM: r'\d+',  # 0-9
-    TokenType.KEYWORD: r'if|else|until|for|return|break|repeat',
-    TokenType.ID: r'[a-zA-Z_]\w*',  # a-z, A-Z, _
+    TokenType.KEYWORD: r'if|else|until|for|return|break|repeat|void|int',
+    TokenType.ID: r'[a-zA-Z]\w*',  # a-z, A-Z, _
     TokenType.SYMBOL: r'[\(\)\{\}\[\]\+\-\*\=\;\,\:\<]|==',
     TokenType.WHITESPACE: r'\s+'
 }
@@ -46,18 +46,23 @@ class Scannerr:
         self.string = string
         self.pos = 0
         self.state = Scanner_State.START
-        self.line_number = 0
+        self.line_number = 1
 
     def is_split_char(self, char: str):
-        return (re.match(regexes[TokenType.SYMBOL], char)) or re.match(regexes[TokenType.WHITESPACE], char)
+        return (re.fullmatch(regexes[TokenType.SYMBOL], char)) or re.fullmatch(regexes[TokenType.WHITESPACE], char)
 
     def next_split_char(self):
-        return 0
+        curser = self.pos
+        while curser < len(self.string):
+            if self.is_split_char(self.string[curser]):
+                return curser
+            curser += 1
+        return curser
 
     def get_next_token(self):
         if self.pos >= len(self.string):
             return Token(TokenType.EOF, 'EOF')
-
+        self.state = Scanner_State.START
         # Assigining the state of the scanner based on the first character
         if self.state == Scanner_State.START:
             if self.string[self.pos].isdigit():
@@ -71,11 +76,12 @@ class Scannerr:
                 else:
                     e = Exception(f'Invalid character at line {self.line_number}: {self.string[self.pos]}')
                     self.pos = self.next_split_char()
+
                     raise e
 
-            elif re.match(regexes[TokenType.WHITESPACE], self.string[self.pos]):
+            elif re.fullmatch(regexes[TokenType.WHITESPACE], self.string[self.pos]):
                 self.state = Scanner_State.IN_WHITESPACE
-            elif re.match(regexes[TokenType.SYMBOL], self.string[self.pos]):
+            elif re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
                 self.state = Scanner_State.IN_SYMBOL
             else:
                 e = Exception(f'Invalid character at line {self.line_number}: {self.string[self.pos]}')
@@ -103,12 +109,13 @@ class Scannerr:
                     comment = self.string[self.pos:self.pos + 7] + '...'
                 else:
                     comment = self.string[self.pos:curser - 2]
-
+                self.state = Scanner_State.START
+                self.pos = curser
                 raise Exception(f'Unclosed comment at {comment}')
 
         elif self.state == Scanner_State.IN_WHITESPACE:
             curser = self.pos
-            while curser < len(self.string) and re.match(regexes[TokenType.WHITESPACE], self.string[curser]):
+            while curser < len(self.string) and re.fullmatch(regexes[TokenType.WHITESPACE], self.string[curser]):
                 if self.string[curser] == '\n':
                     self.line_number += 1
                 curser += 1
@@ -126,7 +133,7 @@ class Scannerr:
             number = self.string[self.pos:curser]
             self.pos = curser
             self.state = Scanner_State.START
-            if not re.match(regexes[TokenType.NUM], number):
+            if not re.fullmatch(regexes[TokenType.NUM], number):
                 raise Exception(f'Invalid number at line {self.line_number}: {number}')
             else:
                 return Token(TokenType.NUM, number)
@@ -134,25 +141,30 @@ class Scannerr:
         elif self.state == Scanner_State.IN_ID:
             curser = self.pos
             while curser < len(self.string):
-                curser += 1
                 if self.is_split_char(self.string[curser]):
                     break
+                curser += 1
+
             word = self.string[self.pos:curser]
             self.pos = curser
             self.state = Scanner_State.START
 
-            if re.match(regexes[TokenType.KEYWORD], word):
+            if re.fullmatch(regexes[TokenType.KEYWORD], word):
                 return Token(TokenType.KEYWORD, word)
-            elif re.match(regexes[TokenType.ID], word):
+            elif re.fullmatch(regexes[TokenType.ID], word):
                 # TODO symbol table
+                # print(bool(re.match(regexes[TokenType.ID], word)))
                 return Token(TokenType.ID, word)
             else:
                 raise Exception(f'Invalid word at line {self.line_number}: {word}')
 
         elif self.state == Scanner_State.IN_SYMBOL:
-            if re.match(regexes[TokenType.SYMBOL], self.string[self.pos]):
+            if re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
                 if (self.string[self.pos] == '*' and self.string[self.pos + 1] == '/'):
-                    raise Exception(f'Unmatched comment at line {self.line_number}: {self.string[self.pos]}')
+                    e = Exception(f'Unmatched comment at line {self.line_number}: {self.string[self.pos]}')
+                    self.pos += 2
+                    self.state = Scanner_State.START
+                    raise e
                 if (self.string[self.pos] == '=' and self.string[self.pos + 1] == '='):
                     symbol = self.string[self.pos:self.pos + 2]
                     self.pos += 2
@@ -163,9 +175,26 @@ class Scannerr:
                 self.state = Scanner_State.START
                 return Token(TokenType.SYMBOL, symbol)
 
+
 Address = "Desktop/uni/semester 6/Compiler/PA1_testcases/T01"
+
+
 def main():
-    scanner = Scannerr(open(Address+'input.txt'), 'r'.read())
+    scanner = Scannerr('''/* test case */
+void main(void){
+	int prod;
+	int i ;
+		prod = 1;
+		i = 1;
+	repeat {
+		prod = i * prod ;
+		i = i + 2;
+	} until (i << 7)
+		output(prod);
+		return;
+
+
+}''')
     while True:
         try:
             token = scanner.get_next_token()
@@ -174,7 +203,6 @@ def main():
             print(token)
         except Exception as e:
             print(e)
-
 
 
 main()
