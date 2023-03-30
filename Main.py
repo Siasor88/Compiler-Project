@@ -1,5 +1,7 @@
 import re
 from enum import Enum
+
+
 class TokenType(Enum):
     NUM = 'NUM'
     ID = 'ID'
@@ -9,15 +11,17 @@ class TokenType(Enum):
     WHITESPACE = 'WHITESPACE'
     EOF = 'EOF'
 
+
 regexes = {
     TokenType.COMMENT: r'\/\*.*\*\/',
-    TokenType.NUM: r'\d+', # 0-9
+    TokenType.NUM: r'\d+',  # 0-9
     TokenType.KEYWORD: r'if|else|until|for|return|break|repeat',
-    TokenType.ID: r'[a-zA-Z_]\w*', # a-z, A-Z, _
-    TokenType.SYMBOL: r'[\(\)\{\}\[\]\+\-\*\/\=\;\,\:\<]|==',
+    TokenType.ID: r'[a-zA-Z_]\w*',  # a-z, A-Z, _
+    TokenType.SYMBOL: r'[\(\)\{\}\[\]\+\-\*\=\;\,\:\<]|==',
     TokenType.WHITESPACE: r'\s+'
 }
 Symbol_table = {}
+
 
 class Token:
     def __init__(self, type: TokenType, string: str):
@@ -28,29 +32,149 @@ class Token:
         return f'<{self.type}, {self.string}>'
 
 
+class Scanner_State(Enum):
+    START = 0
+    IN_NUM = 1
+    IN_ID = 2
+    IN_COMMENT = 3
+    IN_SYMBOL = 4
+    IN_WHITESPACE = 5
+
+
 class Scannerr:
     def __init__(self, string: str):
         self.string = string
         self.pos = 0
+        self.state = Scanner_State.START
+        self.line_number = 0
+
+    def is_split_char(self, char: str):
+        return (re.match(regexes[TokenType.SYMBOL], char)) or re.match(regexes[TokenType.WHITESPACE], char)
+
+    def next_split_char(self):
+        return 0
 
     def get_next_token(self):
         if self.pos >= len(self.string):
             return Token(TokenType.EOF, 'EOF')
-        for type, regex in regexes.items():
-            match = re.match(regex, self.string[self.pos:])
-            if match:
-                self.pos += match.end()
-                return Token(type, match.group())
-        raise Exception(f'Invalid character {self.string[self.pos]}')
 
+        # Assigining the state of the scanner based on the first character
+        if self.state == Scanner_State.START:
+            if self.string[self.pos].isdigit():
+                self.state = Scanner_State.IN_NUM
+            elif self.string[self.pos].isalpha():
+                self.state = Scanner_State.IN_ID
+            elif self.string[self.pos] == '/':
+                if self.string[self.pos + 1] == '*':
+                    self.pos += 2
+                    self.state = Scanner_State.IN_COMMENT
+                else:
+                    e = Exception(f'Invalid character at line {self.line_number}: {self.string[self.pos]}')
+                    self.pos = self.next_split_char()
+                    raise e
 
+            elif re.match(regexes[TokenType.WHITESPACE], self.string[self.pos]):
+                self.state = Scanner_State.IN_WHITESPACE
+            elif re.match(regexes[TokenType.SYMBOL], self.string[self.pos]):
+                self.state = Scanner_State.IN_SYMBOL
+            else:
+                e = Exception(f'Invalid character at line {self.line_number}: {self.string[self.pos]}')
+                self.pos = self.next_split_char()
+                raise e
+
+        # Scanning the string based on the state of the scanner
+        if self.state == Scanner_State.IN_COMMENT:
+            curser = self.pos
+            while curser < len(self.string):
+                if self.string[curser] == '\n':
+                    self.line_number += 1
+
+                if self.string[curser] != '*':
+                    curser += 1
+                elif self.string[curser + 1] == '/':
+                    self.state = Scanner_State.START
+                    token = Token(TokenType.COMMENT, self.string[self.pos:curser - 1])
+                    self.pos = curser + 2
+                    return token
+                else:
+                    curser += 1
+            if curser >= len(self.string):
+                if curser - self.pos > 7:
+                    comment = self.string[self.pos:self.pos + 7] + '...'
+                else:
+                    comment = self.string[self.pos:curser - 2]
+
+                raise Exception(f'Unclosed comment at {comment}')
+
+        elif self.state == Scanner_State.IN_WHITESPACE:
+            curser = self.pos
+            while curser < len(self.string) and re.match(regexes[TokenType.WHITESPACE], self.string[curser]):
+                if self.string[curser] == '\n':
+                    self.line_number += 1
+                curser += 1
+            token = Token(TokenType.WHITESPACE, self.string[self.pos:curser])
+            self.pos = curser
+            self.state = Scanner_State.START
+            return token
+
+        elif self.state == Scanner_State.IN_NUM:
+            curser = self.pos
+            while curser < len(self.string):
+                if self.is_split_char(self.string[curser]):
+                    break
+                curser += 1
+            number = self.string[self.pos:curser]
+            self.pos = curser
+            self.state = Scanner_State.START
+            if not re.match(regexes[TokenType.NUM], number):
+                raise Exception(f'Invalid number at line {self.line_number}: {number}')
+            else:
+                return Token(TokenType.NUM, number)
+
+        elif self.state == Scanner_State.IN_ID:
+            curser = self.pos
+            while curser < len(self.string):
+                curser += 1
+                if self.is_split_char(self.string[curser]):
+                    break
+            word = self.string[self.pos:curser]
+            self.pos = curser
+            self.state = Scanner_State.START
+
+            if re.match(regexes[TokenType.KEYWORD], word):
+                return Token(TokenType.KEYWORD, word)
+            elif re.match(regexes[TokenType.ID], word):
+                # TODO symbol table
+                return Token(TokenType.ID, word)
+            else:
+                raise Exception(f'Invalid word at line {self.line_number}: {word}')
+
+        elif self.state == Scanner_State.IN_SYMBOL:
+            if re.match(regexes[TokenType.SYMBOL], self.string[self.pos]):
+                if (self.string[self.pos] == '*' and self.string[self.pos + 1] == '/'):
+                    raise Exception(f'Unmatched comment at line {self.line_number}: {self.string[self.pos]}')
+                if (self.string[self.pos] == '=' and self.string[self.pos + 1] == '='):
+                    symbol = self.string[self.pos:self.pos + 2]
+                    self.pos += 2
+                    self.state = Scanner_State.START
+                    return Token(TokenType.SYMBOL, symbol)
+                symbol = self.string[self.pos]
+                self.pos += 1
+                self.state = Scanner_State.START
+                return Token(TokenType.SYMBOL, symbol)
+
+Address = "Desktop/uni/semester 6/Compiler/PA1_testcases/T01"
 def main():
-    print('meow')
-    scanner = Scannerr('if (a == 111)        { return 1; } /* comment */')
+    scanner = Scannerr(open(Address+'input.txt'), 'r'.read())
     while True:
-        token = scanner.get_next_token()
-        if token.type == TokenType.EOF:
-            break
-        print(token)
+        try:
+            token = scanner.get_next_token()
+            if token.type == TokenType.EOF:
+                break
+            print(token)
+        except Exception as e:
+            print(e)
+
+
 
 main()
