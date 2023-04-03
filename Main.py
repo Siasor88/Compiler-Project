@@ -96,6 +96,9 @@ class Scannerr:
             curser += 1
         return curser
 
+    def is_valid_char(self, char: str):
+        return char.isalnum() or re.match(regexes[TokenType.SYMBOL], char) or  re.match(regexes[TokenType.WHITESPACE], char)
+
     def get_next_token(self):
         if self.pos >= len(self.string):
             return Token(TokenType.EOF, 'EOF', -1)
@@ -164,7 +167,7 @@ class Scannerr:
             while curser < len(self.string):
                 if self.is_split_char(self.string[curser]):
                     break
-                elif not re.match(regexes[TokenType.ID], self.string[curser]):
+                elif not self.string[curser].isalnum():
                     word = self.string[self.pos:curser + 1]
                     self.pos = curser + 1
                     raise CompileException(self.line_number, f'({word}, Invalid word)')
@@ -189,15 +192,23 @@ class Scannerr:
                     self.pos += 2
                     self.state = ScannerState.START
                     raise e
-                if self.string[self.pos] == '=' and self.string[self.pos + 1] == '=':
-                    symbol = self.string[self.pos:self.pos + 2]
-                    self.pos += 2
-                    self.state = ScannerState.START
-                    return Token(TokenType.SYMBOL, symbol, self.line_number)
-
+                if self.string[self.pos] == '=':
+                    if self.string[self.pos + 1] == '=':
+                        symbol = self.string[self.pos:self.pos + 2]
+                        self.pos += 2
+                        self.state = ScannerState.START
+                        return Token(TokenType.SYMBOL, symbol, self.line_number)
+                    elif self.is_valid_char(self.string[self.pos + 1]):
+                        symbol = self.string[self.pos]
+                        self.pos += 1
+                        return Token(TokenType.SYMBOL, symbol, self.line_number)
+                    else:
+                        symbol = self.string[self.pos: self.pos + 2]
+                        self.pos += 2
+                        raise CompileException(self.line_number, f'({symbol}, Invalid Symbol)')
                 symbol = self.string[self.pos]
                 self.pos += 1
-                self.state = ScannerState.START
+
                 return Token(TokenType.SYMBOL, symbol, self.line_number)
 
     def init_state(self):
@@ -209,18 +220,26 @@ class Scannerr:
             if self.string[self.pos + 1] == '*':
                 self.pos += 2
                 self.state = ScannerState.IN_COMMENT
-            else:
+
+            elif self.string[self.pos + 1] == '/':
                 e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
                 self.pos += 1
                 raise e
-
+            elif self.is_valid_char(self.string[self.pos + 1]):
+                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
+                self.pos += 1
+                raise e
+            else:
+                e = CompileException(self.line_number, f'({self.string[self.pos: self.pos+2]}, Invalid character)')
+                self.pos += 2
+                raise e
         elif re.fullmatch(regexes[TokenType.WHITESPACE], self.string[self.pos]):
             self.state = ScannerState.IN_WHITESPACE
         elif re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
             self.state = ScannerState.IN_SYMBOL
         else:
             e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
-            self.pos = self.next_split_char()
+            self.pos += 1
             raise e
 
 
@@ -274,25 +293,26 @@ def write_symbols(test_case: str, table: SymbolTable):
 
 
 def main():
-    test_case = '01'
-    f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
-    table = SymbolTable()
-    scanner = Scannerr(f.read(), table)
-    f.close()
-    tokens = []
-    errors = []
+    test_cases = ['0' + str(i) for i in range(1,10)] + ['10']
+    for test_case in test_cases:
+        f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
+        table = SymbolTable()
+        scanner = Scannerr(f.read(), table)
+        f.close()
+        tokens = []
+        errors = []
 
-    while True:
-        try:
-            token = scanner.get_next_token()
-            if token.type == TokenType.EOF:
-                break
-            tokens.append(token)
-        except CompileException as e:
-            errors.append(e)
-    write_tokens(test_case, tokens)
-    write_errors(test_case, errors)
-    write_symbols(test_case, table)
+        while True:
+            try:
+                token = scanner.get_next_token()
+                if token.type == TokenType.EOF:
+                    break
+                tokens.append(token)
+            except CompileException as e:
+                errors.append(e)
+        write_tokens(test_case, tokens)
+        write_errors(test_case, errors)
+        write_symbols(test_case, table)
 
 
 main()
