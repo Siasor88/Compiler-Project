@@ -24,13 +24,13 @@ regexes = {
 
 
 class Token:
-    def __init__(self, type: TokenType, string: str, line_no):
-        self.type = type
+    def __init__(self, typee: TokenType, string: str, line_no):
+        self.type = typee
         self.string = string
         self.line_number = line_no
 
     def __str__(self):
-        return f'<{self.type.value}, {self.string}>'
+        return f'({self.type.value}, {self.string})'
 
     def __ge__(self, other):
         return self.line_number >= other.line_number
@@ -62,6 +62,18 @@ class SymbolTable:
             string += str(counter) + '. ' + e + '\n'
             counter += 1
         return string
+
+
+class CompileException(Exception):
+    def __init__(self, line_number: int, message: str):
+        super().__init__(message)
+        self.line_number = line_number
+
+    def __gt__(self, other):
+        return self.line_number > other.line_number
+
+    def __ge__(self, other):
+        return self.line_number >= other.line_number
 
 
 class Scannerr:
@@ -109,13 +121,13 @@ class Scannerr:
                 else:
                     curser += 1
             if curser >= len(self.string):
-                if curser - self.pos > 7:
-                    comment = self.string[self.pos:self.pos + 7] + '...'
+                if curser - self.pos > 6:
+                    comment = self.string[self.pos - 2: self.pos + 5] + '...'
                 else:
                     comment = self.string[self.pos:curser - 2]
                 self.state = ScannerState.START
                 self.pos = curser
-                raise Exception(f'{comment_begin_line_num}. Unclosed comment: {comment}')
+                raise CompileException(comment_begin_line_num, f'({comment}, Unclosed comment)')
 
         elif self.state == ScannerState.IN_WHITESPACE:
             curser = self.pos
@@ -133,10 +145,14 @@ class Scannerr:
             while curser < len(self.string):
                 if self.is_split_char(self.string[curser]):
                     break
+                elif not re.match(regexes[TokenType.NUM], self.string[curser]):
+                    number = self.string[self.pos:curser + 1]
+                    self.pos = curser + 1
+                    raise CompileException(self.line_number, f'({number}, Invalid number)')
                 curser += 1
+
             number = self.string[self.pos:curser]
             self.pos = curser
-            self.state = ScannerState.START
             if not re.fullmatch(regexes[TokenType.NUM], number):
                 raise Exception(f'{self.line_number}.  Invalid number: {number}')
             else:
@@ -147,6 +163,10 @@ class Scannerr:
             while curser < len(self.string):
                 if self.is_split_char(self.string[curser]):
                     break
+                elif not re.match(regexes[TokenType.ID], self.string[curser]):
+                    word = self.string[self.pos:curser + 1]
+                    self.pos = curser + 1
+                    raise Exception(f'{self.line_number}. Invalid word: {word}')
                 curser += 1
 
             word = self.string[self.pos:curser]
@@ -164,7 +184,7 @@ class Scannerr:
         elif self.state == ScannerState.IN_SYMBOL:
             if re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
                 if self.string[self.pos] == '*' and self.string[self.pos + 1] == '/':
-                    e = Exception(f'{self.line_number}. Unmatched comment: {self.string[self.pos:self.pos+2]}')
+                    e = Exception(f'{self.line_number}. Unmatched comment: {self.string[self.pos:self.pos + 2]}')
                     self.pos += 2
                     self.state = ScannerState.START
                     raise e
@@ -243,7 +263,7 @@ def write_symbols(test_case: str, table: SymbolTable):
 
 
 def main():
-    test_case = '10'
+    test_case = '01'
     f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
     table = SymbolTable()
     scanner = Scannerr(f.read(), table)
