@@ -154,7 +154,7 @@ class Scannerr:
             number = self.string[self.pos:curser]
             self.pos = curser
             if not re.fullmatch(regexes[TokenType.NUM], number):
-                raise Exception(f'{self.line_number}.  Invalid number: {number}')
+                raise CompileException(self.line_number, f'({number}, Invalid number)')
             else:
                 return Token(TokenType.NUM, number, self.line_number)
 
@@ -166,7 +166,7 @@ class Scannerr:
                 elif not re.match(regexes[TokenType.ID], self.string[curser]):
                     word = self.string[self.pos:curser + 1]
                     self.pos = curser + 1
-                    raise Exception(f'{self.line_number}. Invalid word: {word}')
+                    raise CompileException(self.line_number, f'({word}, Invalid word)')
                 curser += 1
 
             word = self.string[self.pos:curser]
@@ -179,12 +179,12 @@ class Scannerr:
                 self.table.append(word)
                 return Token(TokenType.ID, word, self.line_number)
             else:
-                raise Exception(f'{self.line_number}. Invalid word: {word}')
+                raise CompileException(self.line_number, f'({word}, Invalid word)')
 
         elif self.state == ScannerState.IN_SYMBOL:
             if re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
                 if self.string[self.pos] == '*' and self.string[self.pos + 1] == '/':
-                    e = Exception(f'{self.line_number}. Unmatched comment: {self.string[self.pos:self.pos + 2]}')
+                    e = CompileException(self.line_number, f'({self.string[self.pos:self.pos + 2]}, Unmatched comment)')
                     self.pos += 2
                     self.state = ScannerState.START
                     raise e
@@ -209,7 +209,7 @@ class Scannerr:
                 self.pos += 2
                 self.state = ScannerState.IN_COMMENT
             else:
-                e = Exception(f'{self.line_number}. Invalid character: {self.string[self.pos]}')
+                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
                 self.pos += 1
                 raise e
 
@@ -218,7 +218,7 @@ class Scannerr:
         elif re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
             self.state = ScannerState.IN_SYMBOL
         else:
-            e = Exception(f'{self.line_number}. Invalid character: {self.string[self.pos]}')
+            e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
             self.pos = self.next_split_char()
             raise e
 
@@ -247,6 +247,7 @@ def write_tokens(test_case: str, tokens: list):
 def write_errors(test_case: str, errors: list):
     f = open('./PA1_testcases/T' + test_case + '/result_lexical_errors.txt', 'w+')
     to_be_written = ''
+    errors.sort()
 
     for error in errors:
         to_be_written += str(error) + '\n'
