@@ -1,5 +1,6 @@
 import re
 from enum import Enum
+from typing import List
 
 
 class TokenType(Enum):
@@ -244,13 +245,22 @@ def write_tokens(test_case: str, tokens: list):
     f.close()
 
 
-def write_errors(test_case: str, errors: list):
+def write_errors(test_case: str, errors: List[CompileException]):
     f = open('./PA1_testcases/T' + test_case + '/result_lexical_errors.txt', 'w+')
     to_be_written = ''
     errors.sort()
-
+    program_lines = {}
     for error in errors:
-        to_be_written += str(error) + '\n'
+        if error.line_number not in program_lines.keys():
+            program_lines[error.line_number] = []
+        program_lines[error.line_number].append(error)
+
+    for line in program_lines.keys():
+        to_be_written += str(line) + '.'
+        for error in program_lines[line]:
+            to_be_written += ' ' + str(error)
+        to_be_written += '\n'
+
     if to_be_written == '':
         to_be_written = 'There is no lexical error.'
     f.write(to_be_written)
@@ -278,8 +288,8 @@ def main():
             if token.type == TokenType.EOF:
                 break
             tokens.append(token)
-        except Exception as e:
-            errors.append(str(e))
+        except CompileException as e:
+            errors.append(e)
     write_tokens(test_case, tokens)
     write_errors(test_case, errors)
     write_symbols(test_case, table)
