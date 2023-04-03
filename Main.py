@@ -97,8 +97,11 @@ class Scannerr:
         return curser
 
     def is_valid_char(self, char: str):
-        return char.isalnum() or re.match(regexes[TokenType.SYMBOL], char) or re.match(regexes[TokenType.WHITESPACE],
-                                                                                       char)
+        return char.isalnum() or \
+               re.match(regexes[TokenType.SYMBOL], char) or \
+               re.match(regexes[TokenType.WHITESPACE],char) or \
+               char == '/'
+
 
     def get_next_token(self):
         if self.pos >= len(self.string):
@@ -188,11 +191,18 @@ class Scannerr:
 
         elif self.state == ScannerState.IN_SYMBOL:
             if re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
-                if self.string[self.pos] == '*' and self.string[self.pos + 1] == '/':
-                    e = CompileException(self.line_number, f'({self.string[self.pos:self.pos + 2]}, Unmatched comment)')
-                    self.pos += 2
-                    self.state = ScannerState.START
-                    raise e
+                if self.string[self.pos] == '*':
+                    if self.string[self.pos + 1] == '/':
+                        e = CompileException(self.line_number,
+                                             f'({self.string[self.pos:self.pos + 2]}, Unmatched comment)')
+                        self.pos += 2
+                        self.state = ScannerState.START
+                        raise e
+                    elif not self.is_valid_char(self.string[self.pos + 1]):
+                        symbol = self.string[self.pos: self.pos + 2]
+                        self.pos += 2
+                        raise CompileException(self.line_number, f'({symbol}, Invalid input)')
+
                 if self.string[self.pos] == '=':
                     if self.string[self.pos + 1] == '=':
                         symbol = self.string[self.pos:self.pos + 2]
@@ -277,7 +287,7 @@ def write_errors(test_case: str, errors: List[CompileException]):
 
     for line in program_lines.keys():
         to_be_written += str(line) + '.' + '\t'
-        for idx,error in enumerate(program_lines[line]):
+        for idx, error in enumerate(program_lines[line]):
             to_be_written += str(error) + (' ' if idx != len(program_lines[line]) - 1 else '')
         to_be_written += '\n'
 
