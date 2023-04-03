@@ -170,7 +170,7 @@ class Scannerr:
                 elif not self.string[curser].isalnum():
                     word = self.string[self.pos:curser + 1]
                     self.pos = curser + 1
-                    raise CompileException(self.line_number, f'({word}, Invalid word)')
+                    raise CompileException(self.line_number, f'({word}, Invalid input)')
                 curser += 1
 
             word = self.string[self.pos:curser]
