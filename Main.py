@@ -60,7 +60,7 @@ class SymbolTable:
         string = ''
         counter = 1
         for e in self.table:
-            string += str(counter) + '.' + ('  ' if counter < 10 else ' ') + e + '\n'
+            string += str(counter) + '.' + '\t' + e + '\n'
             counter += 1
         return string
 
@@ -257,9 +257,9 @@ def write_tokens(test_case: str, tokens: list):
             else:
                 program_lines[token.line_number].append(token)
     for line in program_lines.keys():
-        to_be_written += str(line) + '.'
+        to_be_written += str(line) + '.\t'
         for idx, token in enumerate(program_lines[line]):
-            to_be_written += ('  ' if (idx == 0 and len(str(line)) == 1) else ' ') + str(token)
+            to_be_written += str(token) + (' ' if idx != len(program_lines[line]) - 1 else '')
         to_be_written += '\n'
     f.write(to_be_written)
     f.close()
@@ -276,9 +276,9 @@ def write_errors(test_case: str, errors: List[CompileException]):
         program_lines[error.line_number].append(error)
 
     for line in program_lines.keys():
-        to_be_written += str(line) + '.'
+        to_be_written += str(line) + '.' + '\t'
         for idx,error in enumerate(program_lines[line]):
-            to_be_written += ('  ' if (len(str(line)) == 1 and idx == 0) else ' ') + str(error)
+            to_be_written += str(error) + (' ' if idx != len(program_lines[line]) - 1 else '')
         to_be_written += '\n'
 
     if to_be_written == '':
