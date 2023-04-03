@@ -60,7 +60,7 @@ class SymbolTable:
         string = ''
         counter = 1
         for e in self.table:
-            string += str(counter) + '. ' + e + '\n'
+            string += str(counter) + '.' + ('  ' if counter < 10 else ' ') + e + '\n'
             counter += 1
         return string
 
@@ -97,7 +97,8 @@ class Scannerr:
         return curser
 
     def is_valid_char(self, char: str):
-        return char.isalnum() or re.match(regexes[TokenType.SYMBOL], char) or  re.match(regexes[TokenType.WHITESPACE], char)
+        return char.isalnum() or re.match(regexes[TokenType.SYMBOL], char) or re.match(regexes[TokenType.WHITESPACE],
+                                                                                       char)
 
     def get_next_token(self):
         if self.pos >= len(self.string):
@@ -205,7 +206,7 @@ class Scannerr:
                     else:
                         symbol = self.string[self.pos: self.pos + 2]
                         self.pos += 2
-                        raise CompileException(self.line_number, f'({symbol}, Invalid Symbol)')
+                        raise CompileException(self.line_number, f'({symbol}, Invalid input)')
                 symbol = self.string[self.pos]
                 self.pos += 1
 
@@ -222,15 +223,15 @@ class Scannerr:
                 self.state = ScannerState.IN_COMMENT
 
             elif self.string[self.pos + 1] == '/':
-                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
+                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid input)')
                 self.pos += 1
                 raise e
             elif self.is_valid_char(self.string[self.pos + 1]):
-                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
+                e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid input)')
                 self.pos += 1
                 raise e
             else:
-                e = CompileException(self.line_number, f'({self.string[self.pos: self.pos+2]}, Invalid character)')
+                e = CompileException(self.line_number, f'({self.string[self.pos: self.pos + 2]}, Invalid input)')
                 self.pos += 2
                 raise e
         elif re.fullmatch(regexes[TokenType.WHITESPACE], self.string[self.pos]):
@@ -238,7 +239,7 @@ class Scannerr:
         elif re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
             self.state = ScannerState.IN_SYMBOL
         else:
-            e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid character)')
+            e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid input)')
             self.pos += 1
             raise e
 
@@ -257,8 +258,8 @@ def write_tokens(test_case: str, tokens: list):
                 program_lines[token.line_number].append(token)
     for line in program_lines.keys():
         to_be_written += str(line) + '.'
-        for token in program_lines[line]:
-            to_be_written += ' ' + str(token)
+        for idx, token in enumerate(program_lines[line]):
+            to_be_written += ('  ' if (idx == 0 and len(str(line)) == 1) else ' ') + str(token)
         to_be_written += '\n'
     f.write(to_be_written)
     f.close()
@@ -276,8 +277,8 @@ def write_errors(test_case: str, errors: List[CompileException]):
 
     for line in program_lines.keys():
         to_be_written += str(line) + '.'
-        for error in program_lines[line]:
-            to_be_written += ' ' + str(error)
+        for idx,error in enumerate(program_lines[line]):
+            to_be_written += ('  ' if (len(str(line)) == 1 and idx == 0) else ' ') + str(error)
         to_be_written += '\n'
 
     if to_be_written == '':
@@ -293,7 +294,7 @@ def write_symbols(test_case: str, table: SymbolTable):
 
 
 def main():
-    test_cases = ['0' + str(i) for i in range(1,10)] + ['10']
+    test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
     for test_case in test_cases:
         f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
         table = SymbolTable()
