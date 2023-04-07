@@ -99,9 +99,8 @@ class Scannerr:
     def is_valid_char(self, char: str):
         return char.isalnum() or \
                re.match(regexes[TokenType.SYMBOL], char) or \
-               re.match(regexes[TokenType.WHITESPACE],char) or \
+               re.match(regexes[TokenType.WHITESPACE], char) or \
                char == '/'
-
 
     def get_next_token(self):
         if self.pos >= len(self.string):
@@ -169,7 +168,7 @@ class Scannerr:
         elif self.state == ScannerState.IN_ID:
             curser = self.pos
             while curser < len(self.string):
-                if self.is_split_char(self.string[curser]):
+                if self.is_split_char(self.string[curser]) or self.string[curser] == '/':
                     break
                 elif not self.string[curser].isalnum():
                     word = self.string[self.pos:curser + 1]
