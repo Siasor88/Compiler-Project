@@ -254,7 +254,8 @@ class Scannerr:
 
 
 def write_tokens(test_case: str, tokens: list):
-    f = open('./PA1_testcases/T' + test_case + '/result_tokens.txt', 'w+')
+    # f = open('./PA1_testcases/T' + test_case + '/result_tokens.txt', 'w+')
+    f = open('./tokens.txt', 'w+')
     to_be_written = ''
     counter = 1
     tokens.sort()
@@ -275,7 +276,8 @@ def write_tokens(test_case: str, tokens: list):
 
 
 def write_errors(test_case: str, errors: List[CompileException]):
-    f = open('./PA1_testcases/T' + test_case + '/result_lexical_errors.txt', 'w+')
+    # f = open('./PA1_testcases/T' + test_case + '/result_lexical_errors.txt', 'w+')
+    f = open('lexical_errors.txt', 'w+')
     to_be_written = ''
     errors.sort()
     program_lines = {}
@@ -297,32 +299,34 @@ def write_errors(test_case: str, errors: List[CompileException]):
 
 
 def write_symbols(test_case: str, table: SymbolTable):
-    f = open('./PA1_testcases/T' + test_case + '/result_symbol_table.txt', 'w+')
+    # f = open('./PA1_testcases/T' + test_case + '/result_symbol_table.txt', 'w+')
+    f = open('symbol_table.txt', 'w+')
     f.write(str(table))
     f.close()
 
 
-def main():
-    test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    for test_case in test_cases:
-        f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
-        table = SymbolTable()
-        scanner = Scannerr(f.read(), table)
-        f.close()
-        tokens = []
-        errors = []
+# def main():
+#     test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
+#     for test_case in test_cases:
+#         # f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
+#         f = open('input.txt', 'r')
+#         table = SymbolTable()
+#         scanner = Scannerr(f.read(), table)
+#         f.close()
+#         tokens = []
+#         errors = []
+#
+#         while True:
+#             try:
+#                 token = scanner.get_next_token()
+#                 if token.type == TokenType.EOF:
+#                     break
+#                 tokens.append(token)
+#             except CompileException as e:
+#                 errors.append(e)
+#         write_tokens(test_case, tokens)
+#         write_errors(test_case, errors)
+#         write_symbols(test_case, table)
 
-        while True:
-            try:
-                token = scanner.get_next_token()
-                if token.type == TokenType.EOF:
-                    break
-                tokens.append(token)
-            except CompileException as e:
-                errors.append(e)
-        write_tokens(test_case, tokens)
-        write_errors(test_case, errors)
-        write_symbols(test_case, table)
 
-
-main()
+# main()
