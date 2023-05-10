@@ -9,6 +9,7 @@ json_file = json.load(file)
 FIRSTS, FOLLOWS = json_file['first'], json_file['follow']
 
 file.close()
+
 #
 # f = open('input.txt', 'r')
 # table = SymbolTable()
@@ -74,18 +75,17 @@ class States(Enum):
     Arg_list_prime = 'Arg_list_prime'
 
 
-all_states = []
+
 
 
 def get_state_by_name(name):
-    for state in all_states:
+    for state in States:
         if state.value == name:
             return state
     return None
 
 
-def get_state_by_id(id):
-    return all_states[id]
+
 
 
 # create a class for states
@@ -93,8 +93,8 @@ class State:
     def __init__(self, name, is_final):
         self.name = name
         self.transitions = []
-        self.id = len(all_states)
-        all_states.append(self)
+        # self.id = len(all_states)
+        # all_states.append(self)
         self.first = []
         self.follow = []
         self.is_final = is_final
@@ -144,6 +144,9 @@ class Rule:
             token_value = token.type.value
         return token_value
 
+    def __str__(self):
+        return f'{self.LHS.value} -> ' + str.join(" ",str(self.RHS).replace(",", "").replace("]", "").replace("[", "").replace("\'", "").split())
+
 
 class Transition:
     def __init__(self, variable, rules):
@@ -163,6 +166,17 @@ class Transition:
         return None
 
 
+file = open('./Productions.json')
+
+json_file = json.load(file)
+rules = {}
+for variable in json_file.keys():
+    if variable not in rules.keys():
+        rules[variable] = []
+    for rule in json_file[variable]:
+        rules[variable].append(Rule(LHS=get_state_by_name(variable), RHS=rule))
+print(rules['Declaration_list'][0])
+file.close()
 
 # TODO : add transitions and states and first and follow sets for grammar
 
