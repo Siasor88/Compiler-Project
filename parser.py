@@ -18,10 +18,6 @@ tokens = []
 errors = []
 
 
-# class TransitionTypes(Enum):
-#     Terminal = 1
-#     NonTerminal = 2
-
 def new_token():
     token = scanner.get_next_token()
     while token.type == TokenType.COMMENT or token.type == TokenType.WHITESPACE:
@@ -85,20 +81,6 @@ def get_state_by_name(name):
         if state.value == name:
             return state
     return None
-
-
-# all_states = []
-#
-#
-# def get_state_by_name(name):
-#     for state in all_states:
-#         if state.value == name:
-#             return state
-#     return None
-#
-#
-# def get_state_by_id(id):
-#     return all_states[id]
 
 
 class Rule:
@@ -192,52 +174,13 @@ productions = json_file
 transitions = {}
 # iterate over all the names in States Enum
 for initial_state in States:
-    # print(initial_state.value,type(initial_state))
     if initial_state.value in Terminals:
         continue
     transition = Transition(initial_state, [])
     for production in productions[initial_state.value]:
         rule = create_rule_from_production(initial_state, production)
-        # if initial_state.value == 'Declaration_initial':
-        #     print(production)
-        #     print(rule.LHS, rule.RHS)
         transition.rules.append(rule)
     transitions[initial_state.value] = transition
-
-
-# implementing parse tree node class
-# class ParseTreeNode:
-#     def __init__(self, state: States, token: Token):
-#         self.state = state
-#         self.token = token
-#         self.children = []
-#         self.isTerminal = False
-#         if token is not None:
-#             self.isTerminal = True
-#
-#     def add_child(self, child):
-#         self.children.append(child)
-#
-#     def get_child(self, index):
-#         return self.children[index]
-#
-#     def get_children(self):
-#         return self.children
-#
-#     def get_state(self):
-#         return self.state
-#
-#     def get_token(self):
-#         return self.token
-#
-#     def set_state(self, state):
-#         self.state = state
-#
-#     def set_token(self, token):
-#         self.token = token
-#
-#     def __str__(self):
-#         return str(self.state.value)
 
 
 # rule = transitions['Term_prime'].rules[0]
@@ -259,12 +202,7 @@ id_counter = 1
 queue = [(get_state_by_name('Program'), 1)]
 adj = {}
 
-def depth_k_str(k):
-    return '  ' * k
-def dfs(node,depth):
-    if len(adj[node][0]) == 0:
-        print(node,adj[node][1])
-        return
+
 while token.type != TokenType.EOF:
     current_state = queue[0][0]
     print("Current State:", current_state.value if type(current_state) == States else current_state)
@@ -302,7 +240,7 @@ while token.type != TokenType.EOF:
     else:
         # print(rule.LHS, rule.RHS)
         adj[queue[0][1]] = ([], rule.LHS.value)
-        new_states = [(variable, id_counter + i) for i, variable in enumerate(rule.RHS)]
+        new_states = [(variable, id_counter + i+1) for i, variable in enumerate(rule.RHS)]
         id_counter += len(rule.RHS)
         adj[queue[0][1]][0].append([state[1] for state in new_states])
         queue.pop(0)
