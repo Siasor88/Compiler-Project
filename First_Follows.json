@@ -3,39 +3,39 @@
         "Program": [
             "int", "void", "EPSILON"
         ],
-        "Declaration-list": [
+        "Declaration_list": [
             "int", "void", "EPSILON"
         ],
         "Declaration": [
             "int", "void"
         ],
-        "Declaration-initial": [
+        "Declaration_initial": [
             "int", "void"
         ],
-        "Declaration-prime": [
+        "Declaration_prime": [
             ";", "[", "("
         ],
-        "Var-declaration-prime": [
+        "Var_declaration_prime": [
             ";", "["
         ],
-        "Fun-declaration-prime": ["("],
-        "Type-specifier": [
+        "Fun_declaration_prime": ["("],
+        "Type_specifier": [
             "int", "void"
         ],
         "Params": [
             "int", "void"
         ],
-        "Param-list": [
+        "Param_list": [
             ",", "EPSILON"
         ],
         "Param": [
             "int", "void"
         ],
-        "Param-prime": [
+        "Param_prime": [
             "[", "EPSILON"
         ],
-        "Compound-stmt": ["{"],
-        "Statement-list": [
+        "Compound_stmt": ["{"],
+        "Statement_list": [
             "ID",
             ";",
             "NUM",
@@ -58,17 +58,17 @@
             "repeat",
             "return"
         ],
-        "Expression-stmt": [
+        "Expression_stmt": [
             "ID",
             ";",
             "NUM",
             "(",
             "break"
         ],
-        "Selection-stmt": ["if"],
-        "Iteration-stmt": ["repeat"],
-        "Return-stmt": ["return"],
-        "Return-stmt-prime": [
+        "Selection_stmt": ["if"],
+        "Iteration_stmt": ["repeat"],
+        "Return_stmt": ["return"],
+        "Return_stmt_prime": [
             "ID", ";", "NUM", "("
         ],
         "Expression": [
@@ -94,10 +94,10 @@
             "*",
             "EPSILON"
         ],
-        "Simple-expression-zegond": [
+        "Simple_expression_zegond": [
             "NUM", "("
         ],
-        "Simple-expression-prime": [
+        "Simple_expression_prime": [
             "(",
             "<",
             "==",
@@ -112,17 +112,17 @@
         "Relop": [
             "<", "=="
         ],
-        "Additive-expression": [
+        "Additive_expression": [
             "ID", "NUM", "("
         ],
-        "Additive-expression-prime": [
+        "Additive_expression_prime": [
             "(",
             "+",
             "-",
             "*",
             "EPSILON"
         ],
-        "Additive-expression-zegond": [
+        "Additive_expression_zegond": [
             "NUM", "("
         ],
         "D": [
@@ -134,10 +134,10 @@
         "Term": [
             "ID", "NUM", "("
         ],
-        "Term-prime": [
+        "Term_prime": [
             "(", "*", "EPSILON"
         ],
-        "Term-zegond": [
+        "Term_zegond": [
             "NUM", "("
         ],
         "G": [
@@ -146,29 +146,29 @@
         "Factor": [
             "ID", "NUM", "("
         ],
-        "Var-call-prime": [
+        "Var_call_prime": [
             "[", "(", "EPSILON"
         ],
-        "Var-prime": [
+        "Var_prime": [
             "[", "EPSILON"
         ],
-        "Factor-prime": [
+        "Factor_prime": [
             "(", "EPSILON"
         ],
-        "Factor-zegond": [
+        "Factor_zegond": [
             "NUM", "("
         ],
         "Args": [
             "ID", "NUM", "(", "EPSILON"
         ],
-        "Arg-list": [
+        "Arg_list": [
             "ID", "NUM", "("
         ],
-        "Arg-list-prime": [",", "EPSILON"]
+        "Arg_list_prime": [",", "EPSILON"]
     },
     "follow": {
         "Program": ["$"],
-        "Declaration-list": [
+        "Declaration_list": [
             "ID",
             ";",
             "NUM",
@@ -196,14 +196,14 @@
             "return",
             "$"
         ],
-        "Declaration-initial": [
+        "Declaration_initial": [
             ";",
             "[",
             "(",
             ")",
             ","
         ],
-        "Declaration-prime": [
+        "Declaration_prime": [
             "ID",
             ";",
             "NUM",
@@ -218,7 +218,7 @@
             "return",
             "$"
         ],
-        "Var-declaration-prime": [
+        "Var_declaration_prime": [
             "ID",
             ";",
             "NUM",
@@ -233,7 +233,7 @@
             "return",
             "$"
         ],
-        "Fun-declaration-prime": [
+        "Fun_declaration_prime": [
             "ID",
             ";",
             "NUM",
@@ -248,16 +248,16 @@
             "return",
             "$"
         ],
-        "Type-specifier": ["ID"],
+        "Type_specifier": ["ID"],
         "Params": [")"],
-        "Param-list": [")"],
+        "Param_list": [")"],
         "Param": [
             ")", ","
         ],
-        "Param-prime": [
+        "Param_prime": [
             ")", ","
         ],
-        "Compound-stmt": [
+        "Compound_stmt": [
             "ID",
             ";",
             "NUM",
@@ -274,7 +274,7 @@
             "return",
             "$"
         ],
-        "Statement-list": ["}"],
+        "Statement_list": ["}"],
         "Statement": [
             "ID",
             ";",
@@ -291,7 +291,7 @@
             "until",
             "return"
         ],
-        "Expression-stmt": [
+        "Expression_stmt": [
             "ID",
             ";",
             "NUM",
@@ -307,7 +307,7 @@
             "until",
             "return"
         ],
-        "Selection-stmt": [
+        "Selection_stmt": [
             "ID",
             ";",
             "NUM",
@@ -323,7 +323,7 @@
             "until",
             "return"
         ],
-        "Iteration-stmt": [
+        "Iteration_stmt": [
             "ID",
             ";",
             "NUM",
@@ -339,7 +339,7 @@
             "until",
             "return"
         ],
-        "Return-stmt": [
+        "Return_stmt": [
             "ID",
             ";",
             "NUM",
@@ -355,7 +355,7 @@
             "until",
             "return"
         ],
-        "Return-stmt-prime": [
+        "Return_stmt_prime": [
             "ID",
             ";",
             "NUM",
@@ -380,10 +380,10 @@
         "H": [
             ";", "]", ")", ","
         ],
-        "Simple-expression-zegond": [
+        "Simple_expression_zegond": [
             ";", "]", ")", ","
         ],
-        "Simple-expression-prime": [
+        "Simple_expression_prime": [
             ";", "]", ")", ","
         ],
         "C": [
@@ -392,10 +392,10 @@
         "Relop": [
             "ID", "NUM", "("
         ],
-        "Additive-expression": [
+        "Additive_expression": [
             ";", "]", ")", ","
         ],
-        "Additive-expression-prime": [
+        "Additive_expression_prime": [
             ";",
             "]",
             ")",
@@ -403,7 +403,7 @@
             "<",
             "=="
         ],
-        "Additive-expression-zegond": [
+        "Additive_expression_zegond": [
             ";",
             "]",
             ")",
@@ -432,7 +432,7 @@
             "+",
             "-"
         ],
-        "Term-prime": [
+        "Term_prime": [
             ";",
             "]",
             ")",
@@ -442,7 +442,7 @@
             "+",
             "-"
         ],
-        "Term-zegond": [
+        "Term_zegond": [
             ";",
             "]",
             ")",
@@ -473,7 +473,7 @@
             "-",
             "*"
         ],
-        "Var-call-prime": [
+        "Var_call_prime": [
             ";",
             "]",
             ")",
@@ -484,7 +484,7 @@
             "-",
             "*"
         ],
-        "Var-prime": [
+        "Var_prime": [
             ";",
             "]",
             ")",
@@ -495,7 +495,7 @@
             "-",
             "*"
         ],
-        "Factor-prime": [
+        "Factor_prime": [
             ";",
             "]",
             ")",
@@ -506,7 +506,7 @@
             "-",
             "*"
         ],
-        "Factor-zegond": [
+        "Factor_zegond": [
             ";",
             "]",
             ")",
@@ -518,7 +518,7 @@
             "*"
         ],
         "Args": [")"],
-        "Arg-list": [")"],
-        "Arg-list-prime": [")"]
+        "Arg_list": [")"],
+        "Arg_list_prime": [")"]
     }
 }

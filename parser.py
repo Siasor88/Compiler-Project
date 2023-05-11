@@ -18,9 +18,15 @@ tokens = []
 errors = []
 
 
-class TransitionTypes(Enum):
-    Terminal = 1
-    NonTerminal = 2
+# class TransitionTypes(Enum):
+#     Terminal = 1
+#     NonTerminal = 2
+
+def new_token():
+    token = scanner.get_next_token()
+    while token.type == TokenType.COMMENT or token.type == TokenType.WHITESPACE:
+        token = scanner.get_next_token()
+    return token
 
 
 Terminals = ["ID", ";", "[", "NUM", "]", "(", ")", "int", "void", ",", "{", "}", "break", "if", "else", "repeat",
@@ -74,46 +80,25 @@ class States(Enum):
     Arg_list_prime = 'Arg_list_prime'
 
 
-all_states = []
-
-
 def get_state_by_name(name):
-    for state in all_states:
+    for state in States:
         if state.value == name:
             return state
     return None
 
 
-def get_state_by_id(id):
-    return all_states[id]
-
-
-# create a class for states
-class State:
-    def __init__(self, name, is_final):
-        self.name = name
-        self.transitions = []
-        self.id = len(all_states)
-        all_states.append(self)
-        self.first = []
-        self.follow = []
-        self.is_final = is_final
-
-    def move(self, token):
-        for transition in self.transitions:
-            if transition.transition_type == TransitionTypes.Terminal:
-                if transition.symbol == "ID" or transition.symbol == "NUM":
-                    if token.TokenType == TokenType.ID or token.TokenType == TokenType.NUM:
-                        # todo get_new_token should be called and the token should be updated
-                        return transition.final_state
-                elif transition.symbol == token.value:
-                    # todo get_new_token should be called and the token should be updated
-                    return transition.final_state
-            elif transition.transition_type == TransitionTypes.NonTerminal and token.TokenType in self.first:
-                # todo: move(new_state) should be called and if upon success, the transition should take place
-                return transition.final_state
-        # todo if no transition is found, an error should be raised
-        return None
+# all_states = []
+#
+#
+# def get_state_by_name(name):
+#     for state in all_states:
+#         if state.value == name:
+#             return state
+#     return None
+#
+#
+# def get_state_by_id(id):
+#     return all_states[id]
 
 
 class Rule:
@@ -124,25 +109,61 @@ class Rule:
     def appliable(self, token: Token):
         token_value = self.get_token_value(token)
         if token_value in FIRSTS[self.LHS.value]:
+            variable = self.RHS[0]
+            if variable in Terminals:
+                if variable == token_value:
+                    return True
+                elif variable == 'EPSILON':
+                    if token_value in FOLLOWS[self.LHS.value]:
+                        return True
+            elif token_value in FIRSTS[variable.value]:
+                return True
+            elif token_value in FOLLOWS[variable.value] and 'EPSILON' in FIRSTS[variable.value]:
+                return True
+            # if variable in Terminals:
+            #     if variable == token_value:
+            #         return True
+            #     elif variable == 'EPSILON':
+            #         if token_value in FOLLOWS[self.LHS.value]:
+            #             return True
+            # elif token_value in FIRSTS[variable.value]:
+            #     return True
+            # elif token_value in FOLLOWS[variable.value]:
+            #     return True
+            # else:
+            #     return False
+        if token_value in FOLLOWS[self.LHS.value] and 'EPSILON' in FIRSTS[self.LHS.value]:
+            flag = True
             for variable in self.RHS:
                 if variable in Terminals:
-                    if variable == token_value:
-                        return True
-                    elif variable == 'EPSILON':
-                        if token_value in FOLLOWS[self.LHS.value]:
-                            return True
-                elif token_value in FIRSTS[variable.value]:
-                    return True
-                elif 'EPSILON' not in FIRSTS[variable]:
-                    return False
-        if token_value in FOLLOWS[self.LHS.value]:
-            return True
+                    if variable == 'EPSILON':
+                        continue
+                    else:
+                        flag = False
+                        break
+                if 'EPSILON' not in FIRSTS[variable.value]:
+                    flag = False
+                    break
+            if flag:
+                return True
+        return False
 
     def get_token_value(self, token):
         token_value = token.string
         if token.type in [TokenType.ID, TokenType.NUM]:
             token_value = token.type.value
         return token_value
+
+
+def create_rule_from_production(state, path):
+    rhs = []
+    for variable in path:
+        if get_state_by_name(variable) is not None:
+            rhs.append(get_state_by_name(variable))
+        elif variable in Terminals:
+            rhs.append(variable)
+    the_rule = Rule(state, rhs)
+    return the_rule
 
 
 class Transition:
@@ -163,11 +184,110 @@ class Transition:
         return None
 
 
+# creating transitions and rules from the production.json file
+file = open('./Productions.json')
+json_file = json.load(file)
+file.close()
+productions = json_file['productions']
+transitions = {}
+# iterate over all the names in States Enum
+for initial_state in States:
+    # print(initial_state.value,type(initial_state))
+    if initial_state.value in Terminals:
+        continue
+    transition = Transition(initial_state, [])
+    for production in productions[initial_state.value]:
+        rule = create_rule_from_production(initial_state, production)
+        # if initial_state.value == 'Declaration_initial':
+        #     print(production)
+        #     print(rule.LHS, rule.RHS)
+        transition.rules.append(rule)
+    transitions[initial_state.value] = transition
 
-# TODO : add transitions and states and first and follow sets for grammar
 
-# scanner = Scannerr()
-# token = scanner.get_next_token()
-# starting_state = None
-# while token.TokenType != TokenType.EOF:
-#     print("meow")
+# implementing parse tree node class
+class ParseTreeNode:
+    def __init__(self, state: States, token: Token):
+        self.state = state
+        self.token = token
+        self.children = []
+        self.isTerminal = False
+        if token is not None:
+            self.isTerminal = True
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def get_child(self, index):
+        return self.children[index]
+
+    def get_children(self):
+        return self.children
+
+    def get_state(self):
+        return self.state
+
+    def get_token(self):
+        return self.token
+
+    def set_state(self, state):
+        self.state = state
+
+    def set_token(self, token):
+        self.token = token
+
+    def __str__(self):
+        return str(self.state.value)
+
+
+# rule = transitions['Term_prime'].rules[0]
+# print(rule.LHS, rule.RHS)
+# token = Token(TokenType.SYMBOL, "*",5)
+# print(rule.appliable(token))
+# # exit the program
+# exit(0)
+
+
+file = open('./P2_testcases/T01/input.txt', 'r')
+table = SymbolTable()
+scanner = Scannerr(file.read(), table)
+file.close()
+token = new_token()
+print("New Token:", token)
+queue = [get_state_by_name('Program')]
+while token.type != TokenType.EOF:
+    current_state = queue[0]
+    print("Current State:", current_state.value if type(current_state) == States else current_state)
+    if current_state == 'EPSILON':
+        queue.pop(0)
+        continue
+    if current_state in Terminals:
+        if current_state == token.string:
+            queue.pop(0)
+            token = new_token()
+            print("New Token:", token)
+            continue
+        elif current_state == 'NUM':
+            if token.type == TokenType.NUM:
+                queue.pop(0)
+                token = new_token()
+                print("New Token:", token)
+                continue
+        elif current_state == 'ID':
+            if token.type == TokenType.ID:
+                queue.pop(0)
+                token = new_token()
+                print("New Token:", token)
+                continue
+        else:
+            raise Exception('Syntax Error')
+    transition = transitions[current_state.value]
+    rule = transition.appliable(token)
+    if rule is None:
+        raise Exception('meow Error')
+    else:
+        # print(rule.LHS, rule.RHS)
+        queue.pop(0)
+        queue = rule.RHS + queue
+        print(rule.LHS.value, '->',
+              ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
