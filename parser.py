@@ -188,7 +188,7 @@ class Transition:
 file = open('./Productions.json')
 json_file = json.load(file)
 file.close()
-productions = json_file['productions']
+productions = json_file
 transitions = {}
 # iterate over all the names in States Enum
 for initial_state in States:
@@ -206,38 +206,38 @@ for initial_state in States:
 
 
 # implementing parse tree node class
-class ParseTreeNode:
-    def __init__(self, state: States, token: Token):
-        self.state = state
-        self.token = token
-        self.children = []
-        self.isTerminal = False
-        if token is not None:
-            self.isTerminal = True
-
-    def add_child(self, child):
-        self.children.append(child)
-
-    def get_child(self, index):
-        return self.children[index]
-
-    def get_children(self):
-        return self.children
-
-    def get_state(self):
-        return self.state
-
-    def get_token(self):
-        return self.token
-
-    def set_state(self, state):
-        self.state = state
-
-    def set_token(self, token):
-        self.token = token
-
-    def __str__(self):
-        return str(self.state.value)
+# class ParseTreeNode:
+#     def __init__(self, state: States, token: Token):
+#         self.state = state
+#         self.token = token
+#         self.children = []
+#         self.isTerminal = False
+#         if token is not None:
+#             self.isTerminal = True
+#
+#     def add_child(self, child):
+#         self.children.append(child)
+#
+#     def get_child(self, index):
+#         return self.children[index]
+#
+#     def get_children(self):
+#         return self.children
+#
+#     def get_state(self):
+#         return self.state
+#
+#     def get_token(self):
+#         return self.token
+#
+#     def set_state(self, state):
+#         self.state = state
+#
+#     def set_token(self, token):
+#         self.token = token
+#
+#     def __str__(self):
+#         return str(self.state.value)
 
 
 # rule = transitions['Term_prime'].rules[0]
@@ -254,27 +254,41 @@ scanner = Scannerr(file.read(), table)
 file.close()
 token = new_token()
 print("New Token:", token)
-queue = [get_state_by_name('Program')]
+# queue = [get_state_by_name('Program')]
+id_counter = 1
+queue = [(get_state_by_name('Program'), 1)]
+adj = {}
+
+def depth_k_str(k):
+    return '  ' * k
+def dfs(node,depth):
+    if len(adj[node][0]) == 0:
+        print(node,adj[node][1])
+        return
 while token.type != TokenType.EOF:
-    current_state = queue[0]
+    current_state = queue[0][0]
     print("Current State:", current_state.value if type(current_state) == States else current_state)
     if current_state == 'EPSILON':
+        adj[queue[0][1]] = ([], 'EPSILON')
         queue.pop(0)
         continue
     if current_state in Terminals:
         if current_state == token.string:
+            adj[queue[0][1]] = ([], token)
             queue.pop(0)
             token = new_token()
             print("New Token:", token)
             continue
         elif current_state == 'NUM':
             if token.type == TokenType.NUM:
+                adj[queue[0][1]] = ([], token)
                 queue.pop(0)
                 token = new_token()
                 print("New Token:", token)
                 continue
         elif current_state == 'ID':
             if token.type == TokenType.ID:
+                adj[queue[0][1]] = ([], token)
                 queue.pop(0)
                 token = new_token()
                 print("New Token:", token)
@@ -287,7 +301,11 @@ while token.type != TokenType.EOF:
         raise Exception('meow Error')
     else:
         # print(rule.LHS, rule.RHS)
+        adj[queue[0][1]] = ([], rule.LHS.value)
+        new_states = [(variable, id_counter + i) for i, variable in enumerate(rule.RHS)]
+        id_counter += len(rule.RHS)
+        adj[queue[0][1]][0].append([state[1] for state in new_states])
         queue.pop(0)
-        queue = rule.RHS + queue
+        queue = new_states + queue
         print(rule.LHS.value, '->',
               ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
