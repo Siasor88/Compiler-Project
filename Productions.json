@@ -1,5 +1,4 @@
 {
-  "productions": {
     "Program": [
       [
         "Declaration_list"
@@ -385,4 +384,3 @@
       ]
     ]
   }
-}
