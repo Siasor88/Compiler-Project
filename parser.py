@@ -2,6 +2,7 @@
 from enum import Enum
 from compiler import Scannerr, Token, SymbolTable, TokenType
 import json
+from anytree import Node, RenderTree
 
 file = open('./First_Follows.json')
 
@@ -16,6 +17,13 @@ file.close()
 # f.close()
 tokens = []
 errors = []
+
+
+# nodex = Node('ali')
+# nodee = Node('ali', parent=nodex)
+# nodee = Node('ali', parent=nodex)
+# for pre, fill, node in RenderTree(nodex):
+#     print("%s%s" % (pre, node.name))
 
 
 def new_token():
@@ -182,7 +190,6 @@ for initial_state in States:
         transition.rules.append(rule)
     transitions[initial_state.value] = transition
 
-
 # rule = transitions['Term_prime'].rules[0]
 # print(rule.LHS, rule.RHS)
 # token = Token(TokenType.SYMBOL, "*",5)
@@ -201,7 +208,6 @@ print("New Token:", token)
 id_counter = 1
 queue = [(get_state_by_name('Program'), 1)]
 adj = {}
-
 
 while token.type != TokenType.EOF:
     current_state = queue[0][0]
@@ -240,10 +246,40 @@ while token.type != TokenType.EOF:
     else:
         # print(rule.LHS, rule.RHS)
         adj[queue[0][1]] = ([], rule.LHS.value)
-        new_states = [(variable, id_counter + i+1) for i, variable in enumerate(rule.RHS)]
+        new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
         id_counter += len(rule.RHS)
         adj[queue[0][1]][0].append([state[1] for state in new_states])
         queue.pop(0)
         queue = new_states + queue
         print(rule.LHS.value, '->',
               ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
+
+
+def get_name_of_children(adj, node):
+    neighbors = adj[node][0]
+    names = []
+    for neighbor in neighbors:
+        names.append(adj[neighbor][1])
+    return names
+
+
+def create_tree(adj: dict):
+    root = Node("Program")
+    current_node = 1
+    stack = [current_node]
+    visited = []
+    node_map = {1: root}
+    while stack:
+        current_node = stack[-1]
+        stack.pop()
+        father = node_map[current_node]
+        for node in reversed(adj[current_node][0]):
+            stack.append(node)
+            tree_node = Node(adj[node][1], parent=father)
+            node_map[node] = tree_node
+    return root
+
+def draw_tree(adj: dict):
+    root = create_tree(adj)
+    for pre, fill, node in RenderTree(root):
+        print("%s%s" % (pre, node.name))
