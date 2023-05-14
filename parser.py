@@ -255,6 +255,10 @@ while token.type != TokenType.EOF:
               ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
 
 
+print(adj[1])
+print(adj[2])
+print(adj[4])
+
 def get_name_of_children(adj, node):
     neighbors = adj[node][0]
     names = []
