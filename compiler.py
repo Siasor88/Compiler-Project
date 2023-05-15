@@ -104,7 +104,7 @@ class Scannerr:
 
     def get_next_token(self):
         if self.pos >= len(self.string):
-            return Token(TokenType.EOF, 'EOF', -1)
+            return Token(TokenType.EOF, 'EOF', self.line_number)
         self.state = ScannerState.START
         # Assigining the state of the scanner based on the first character
         if self.state == ScannerState.START:
@@ -304,7 +304,7 @@ def write_symbols(test_case: str, table: SymbolTable):
     f.write(str(table))
     f.close()
 
-
+exec(open('parser.py').read())
 # def main():
 #     test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
 #     for test_case in test_cases:
