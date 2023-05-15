@@ -30,6 +30,8 @@ def new_token():
     token = scanner.get_next_token()
     while token.type == TokenType.COMMENT or token.type == TokenType.WHITESPACE:
         token = scanner.get_next_token()
+    if token.type == TokenType.EOF:
+        token.string = "$"
     return token
 
 
@@ -205,13 +207,18 @@ file.close()
 token = new_token()
 print("New Token:", token)
 # queue = [get_state_by_name('Program')]
-id_counter = 1
-queue = [(get_state_by_name('Program'), 1)]
+id_counter = 2
+queue = [(get_state_by_name('Program'), 1), ('$', 2)]
 adj = {}
 
-while token.type != TokenType.EOF:
+while True:
     current_state = queue[0][0]
     print("Current State:", current_state.value if type(current_state) == States else current_state)
+    print("id", queue[0][1])
+    if current_state == '$':
+        adj[queue[0][1]] = ([],'$')
+        queue.pop(0)
+        break
     if current_state == 'EPSILON':
         adj[queue[0][1]] = ([], 'EPSILON')
         queue.pop(0)
@@ -247,12 +254,16 @@ while token.type != TokenType.EOF:
         # print(rule.LHS, rule.RHS)
         adj[queue[0][1]] = ([], rule.LHS.value)
         new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
+        print("new states", new_states)
         id_counter += len(rule.RHS)
-        adj[queue[0][1]][0].append([state[1] for state in new_states])
+        # adj[queue[0][1]][0].append([state[1] for state in new_states])
+        for state in new_states:
+            adj[queue[0][1]][0].append(state[1])
         queue.pop(0)
         queue = new_states + queue
-        print(rule.LHS.value, '->',
-              ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
+        print("new queue", queue)
+        # print(rule.LHS.value, '->',
+        #       ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
 
 
 print(adj[1])
@@ -283,7 +294,10 @@ def create_tree(adj: dict):
             node_map[node] = tree_node
     return root
 
+
 def draw_tree(adj: dict):
     root = create_tree(adj)
     for pre, fill, node in RenderTree(root):
         print("%s%s" % (pre, node.name))
+
+# draw_tree(adj)
