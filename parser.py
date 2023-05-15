@@ -205,7 +205,7 @@ table = SymbolTable()
 scanner = Scannerr(file.read(), table)
 file.close()
 token = new_token()
-print("New Token:", token)
+## print("New Token:", token)
 # queue = [get_state_by_name('Program')]
 id_counter = 2
 queue = [(get_state_by_name('Program'), 1), ('$', 2)]
@@ -213,14 +213,14 @@ adj = {}
 
 while True:
     current_state = queue[0][0]
-    print("Current State:", current_state.value if type(current_state) == States else current_state)
-    print("id", queue[0][1])
+    ## print("Current State:", current_state.value if type(current_state) == States else current_state)
+    ## print("id", queue[0][1])
     if current_state == '$':
         adj[queue[0][1]] = ([],'$')
         queue.pop(0)
         break
     if current_state == 'EPSILON':
-        adj[queue[0][1]] = ([], 'EPSILON')
+        adj[queue[0][1]] = ([], 'epsilon')
         queue.pop(0)
         continue
     if current_state in Terminals:
@@ -228,21 +228,21 @@ while True:
             adj[queue[0][1]] = ([], token)
             queue.pop(0)
             token = new_token()
-            print("New Token:", token)
+            ## print("New Token:", token)
             continue
         elif current_state == 'NUM':
             if token.type == TokenType.NUM:
                 adj[queue[0][1]] = ([], token)
                 queue.pop(0)
                 token = new_token()
-                print("New Token:", token)
+                ## print("New Token:", token)
                 continue
         elif current_state == 'ID':
             if token.type == TokenType.ID:
                 adj[queue[0][1]] = ([], token)
                 queue.pop(0)
                 token = new_token()
-                print("New Token:", token)
+                ## print("New Token:", token)
                 continue
         else:
             raise Exception('Syntax Error')
@@ -254,21 +254,18 @@ while True:
         # print(rule.LHS, rule.RHS)
         adj[queue[0][1]] = ([], rule.LHS.value)
         new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
-        print("new states", new_states)
+        ## print("new states", new_states)
         id_counter += len(rule.RHS)
         # adj[queue[0][1]][0].append([state[1] for state in new_states])
         for state in new_states:
             adj[queue[0][1]][0].append(state[1])
         queue.pop(0)
         queue = new_states + queue
-        print("new queue", queue)
+        ## print("new queue", queue)
         # print(rule.LHS.value, '->',
         #       ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
 
 
-print(adj[1])
-print(adj[2])
-print(adj[4])
 
 def get_name_of_children(adj, node):
     neighbors = adj[node][0]
@@ -288,10 +285,11 @@ def create_tree(adj: dict):
         current_node = stack[-1]
         stack.pop()
         father = node_map[current_node]
-        for node in reversed(adj[current_node][0]):
+        for node in (adj[current_node][0]):
             stack.append(node)
-            tree_node = Node(adj[node][1], parent=father)
+            tree_node = Node(str(adj[node][1]).replace('_', '-'), parent=father)
             node_map[node] = tree_node
+    Node('$', parent = root)
     return root
 
 
@@ -300,4 +298,4 @@ def draw_tree(adj: dict):
     for pre, fill, node in RenderTree(root):
         print("%s%s" % (pre, node.name))
 
-# draw_tree(adj)
+draw_tree(adj)
