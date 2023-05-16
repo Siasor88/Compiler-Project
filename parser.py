@@ -245,8 +245,8 @@ def draw_tree(adj: dict, addr: str):
     sys.stdout = ori
 
 def main():
-    # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    test_cases = ['07']
+    test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
+    #test_cases = ['07']
     for test_case in test_cases:
         addr = './P2_testcases/T'+ test_case +'/'
         file = open(addr + 'input.txt', 'r')
@@ -268,11 +268,7 @@ def main():
 
             if type(current_state) != str:
                 current_state = current_state.value
-
-            if current_state == 'ID':
-                print('mewo')
-                x = 2
-
+                
             if current_state == '$':
                 adj[queue[0][1]] = ([], '$')
                 queue.pop(0)
@@ -288,24 +284,22 @@ def main():
                     token = new_token(scanner)
                     ## print("New Token:", token)
                     continue
-                elif current_state == 'NUM':
-                    if token.type == TokenType.NUM:
-                        adj[queue[0][1]] = ([], token)
-                        queue.pop(0)
-                        token = new_token(scanner)
-                        ## print("New Token:", token)
-                        continue
-                elif current_state == 'ID':
-                    if token.type == TokenType.ID:
-                        adj[queue[0][1]] = ([], token)
-                        queue.pop(0)
-                        token = new_token(scanner)
-                        ## print("New Token:", token)
-                        continue
+                elif current_state == 'NUM' and token.type == TokenType.NUM:
+                    adj[queue[0][1]] = ([], token)
+                    queue.pop(0)
+                    token = new_token(scanner)
+                    ## print("New Token:", token)
+                    continue
+                elif current_state == 'ID' and token.type == TokenType.ID:
+                    adj[queue[0][1]] = ([], token)
+                    queue.pop(0)
+                    token = new_token(scanner)
+                    ## print("New Token:", token)
+                    continue
                 else:
                     token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
                                                                      TokenType.EOF] else token.string
-                    file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
+                    file.write(f"#{token.line_number} : syntax error, missing {str(current_state).replace('_', '-')}\n")
                     has_syntax_error = True
                     remove_from_adj(queue[0][1], adj)
                     queue.pop(0)
@@ -321,7 +315,7 @@ def main():
                 token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
                                                                  TokenType.EOF] else token.string
                 if token_value in FOLLOWS[current_state]:
-                    file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
+                    file.write(f"#{token.line_number} : syntax error, missing {str(current_state).replace('_', '-')}\n")
                     has_syntax_error = True
                     remove_from_adj(queue[0][1], adj)
                     queue.pop(0)
@@ -329,11 +323,11 @@ def main():
                 else:
                     if token.type == TokenType.EOF:
                         has_syntax_error = True
-                        file.write(f"#{token.line_number} : syntax error, Unexpected {token_value} \n")
+                        file.write(f"#{token.line_number} : syntax error, Unexpected {str(token_value).replace('_', '-')}\n")
                         for i in range(len(queue)):
                             remove_from_adj(queue[i][1], adj)
                         break
-                    file.write(f"#{token.line_number} : syntax error, illegal {token_value} \n")
+                    file.write(f"#{token.line_number} : syntax error, illegal {str(token_value).replace('_', '-')}\n")
                     token = new_token(scanner)
                     continue
             else:
