@@ -1,4 +1,3 @@
-import re
 from enum import Enum
 from typing import List
 
@@ -15,12 +14,10 @@ class TokenType(Enum):
 
 KEY_WORDS = ['if', 'else', 'until', 'return', 'break', 'repeat', 'void', 'int']
 regexes = {
-    TokenType.COMMENT: r'\/\*.*\*\/',
     TokenType.NUM: r'\d+',  # 0-9
-    TokenType.KEYWORD: r'if|else|until|return|break|repeat|void|int',
-    TokenType.ID: r'[a-zA-Z]\w*',  # a-z, A-Z, _
-    TokenType.SYMBOL: r'[\(\)\{\}\[\]\+\-\*\=\;\,\:\<]|==',
-    TokenType.WHITESPACE: r'\s+'
+    TokenType.KEYWORD: ['if', 'else', 'until', 'return', 'break', 'repeat', 'void', 'int'],
+    TokenType.SYMBOL: ['[', '(', ')', '{', '}', '[', ']', '+', '-', '*', '=', ';', ',', ':', '<', '=='],
+    TokenType.WHITESPACE: [' ', '\n', '\t', '\32', '\r', '\v', '\f']
 }
 
 
@@ -86,7 +83,7 @@ class Scannerr:
         self.table = symbol_table
 
     def is_split_char(self, char: str):
-        return (re.fullmatch(regexes[TokenType.SYMBOL], char)) or re.fullmatch(regexes[TokenType.WHITESPACE], char)
+        return (char in regexes[TokenType.SYMBOL]) or char in regexes[TokenType.WHITESPACE]
 
     def next_split_char(self):
         curser = self.pos
@@ -98,8 +95,8 @@ class Scannerr:
 
     def is_valid_char(self, char: str):
         return char.isalnum() or \
-               re.match(regexes[TokenType.SYMBOL], char) or \
-               re.match(regexes[TokenType.WHITESPACE], char) or \
+               char in regexes[TokenType.SYMBOL] or \
+               char in regexes[TokenType.WHITESPACE] or \
                char == '/'
 
     def get_next_token(self):
@@ -138,7 +135,7 @@ class Scannerr:
 
         elif self.state == ScannerState.IN_WHITESPACE:
             curser = self.pos
-            while curser < len(self.string) and re.fullmatch(regexes[TokenType.WHITESPACE], self.string[curser]):
+            while curser < len(self.string) and self.string[curser] in regexes[TokenType.WHITESPACE]:
                 if self.string[curser] == '\n':
                     self.line_number += 1
                 curser += 1
@@ -152,7 +149,7 @@ class Scannerr:
             while curser < len(self.string):
                 if self.is_split_char(self.string[curser]):
                     break
-                elif not re.match(regexes[TokenType.NUM], self.string[curser]):
+                elif not self.string[curser].isdigit():
                     number = self.string[self.pos:curser + 1]
                     self.pos = curser + 1
                     raise CompileException(self.line_number, f'({number}, Invalid number)')
@@ -160,7 +157,7 @@ class Scannerr:
 
             number = self.string[self.pos:curser]
             self.pos = curser
-            if not re.fullmatch(regexes[TokenType.NUM], number):
+            if not number.isdecimal():
                 raise CompileException(self.line_number, f'({number}, Invalid number)')
             else:
                 return Token(TokenType.NUM, number, self.line_number)
@@ -180,16 +177,16 @@ class Scannerr:
             self.pos = curser
             self.state = ScannerState.START
 
-            if re.fullmatch(regexes[TokenType.KEYWORD], word):
+            if word in regexes[TokenType.KEYWORD]:
                 return Token(TokenType.KEYWORD, word, self.line_number)
-            elif re.fullmatch(regexes[TokenType.ID], word):
+            elif word.isidentifier():
                 self.table.append(word)
                 return Token(TokenType.ID, word, self.line_number)
             else:
                 raise CompileException(self.line_number, f'({word}, Invalid word)')
 
         elif self.state == ScannerState.IN_SYMBOL:
-            if re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
+            if self.string[self.pos] in regexes[TokenType.SYMBOL]:
                 if self.string[self.pos] == '*':
                     if self.string[self.pos + 1] == '/':
                         e = CompileException(self.line_number,
@@ -243,9 +240,9 @@ class Scannerr:
                 e = CompileException(self.line_number, f'({self.string[self.pos: self.pos + 2]}, Invalid input)')
                 self.pos += 2
                 raise e
-        elif re.fullmatch(regexes[TokenType.WHITESPACE], self.string[self.pos]):
+        elif self.string[self.pos] in regexes[TokenType.WHITESPACE]:
             self.state = ScannerState.IN_WHITESPACE
-        elif re.fullmatch(regexes[TokenType.SYMBOL], self.string[self.pos]):
+        elif self.string[self.pos] in regexes[TokenType.SYMBOL]:
             self.state = ScannerState.IN_SYMBOL
         else:
             e = CompileException(self.line_number, f'({self.string[self.pos]}, Invalid input)')
@@ -309,8 +306,8 @@ exec(open('parser.py').read())
 # def main():
 #     test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
 #     for test_case in test_cases:
-#         # f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
-#         f = open('input.txt', 'r')
+#         f = open('./PA1_testcases/T' + test_case + '/input.txt', 'r')
+#         # f = open('input.txt', 'r')
 #         table = SymbolTable()
 #         scanner = Scannerr(f.read(), table)
 #         f.close()
