@@ -304,6 +304,7 @@ def write_symbols(test_case: str, table: SymbolTable):
     f.write(str(table))
     f.close()
 
+
 exec(open('parser.py').read())
 # def main():
 #     test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']

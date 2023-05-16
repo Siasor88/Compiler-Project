@@ -201,8 +201,7 @@ for initial_state in States:
 # exit(0)
 
 
-# file = open('./P2_testcases/T08/input.txt', 'r')
-file = open('./input.txt', 'r')
+file = open('./P2_testcases/T08/input.txt', 'r')
 table = SymbolTable()
 scanner = Scannerr(file.read(), table)
 file.close()
@@ -213,7 +212,7 @@ id_counter = 2
 queue = [(get_state_by_name('Program'), 1)]
 adj = {}
 file = open('./syntax_errors.txt', 'w')
-
+has_syntax_error = False
 
 def remove_from_adj(id):
     # print("removing ", id, " was called ")
@@ -257,6 +256,7 @@ while True:
             token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
                                                              TokenType.EOF] else token.string
             file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
+            has_syntax_error = True
             remove_from_adj(queue[0][1])
             queue.pop(0)
             continue
@@ -266,11 +266,13 @@ while True:
         token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM, TokenType.EOF] else token.string
         if token_value in FOLLOWS[current_state.value]:
             file.write(f"#{token.line_number} : syntax error, missing {current_state.value} \n")
+            has_syntax_error = True
             remove_from_adj(queue[0][1])
             queue.pop(0)
             continue
         else:
             if token.type == TokenType.EOF:
+                has_syntax_error = True
                 file.write(f"#{token.line_number} : syntax error, Unexpected {token_value} \n")
                 for i in range(len(queue)):
                     remove_from_adj(queue[i][1])
@@ -294,7 +296,8 @@ while True:
         ## print("new queue", queue)
         # print(rule.LHS.value, '->',
         #       ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
-
+if not has_syntax_error:
+    file.write("There is no syntax error.")
 file.close()
 # for key in adj:
 #     print(key, "->", adj[key][0])
