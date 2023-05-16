@@ -27,7 +27,7 @@ errors = []
 #     print("%s%s" % (pre, node.name))
 
 
-def new_token():
+def new_token(scanner: Scannerr):
     token = scanner.get_next_token()
     while token.type == TokenType.COMMENT or token.type == TokenType.WHITESPACE:
         token = scanner.get_next_token()
@@ -156,6 +156,7 @@ def create_rule_from_production(state, path):
         elif variable in Terminals:
             rhs.append(variable)
     the_rule = Rule(state, rhs)
+
     return the_rule
 
 
@@ -176,6 +177,12 @@ class Transition:
                 return rule
         return None
 
+
+def remove_from_adj(id, adj):
+    # print("removing ", id, " was called ")
+    for key in adj:
+        if id in adj[key][0]:
+            adj[key][0].remove(id)
 
 # creating transitions and rules from the production.json file
 file = open('./Productions.json')
@@ -200,107 +207,6 @@ for initial_state in States:
 # # exit the program
 # exit(0)
 
-
-file = open('./P2_testcases/T08/input.txt', 'r')
-table = SymbolTable()
-scanner = Scannerr(file.read(), table)
-file.close()
-token = new_token()
-## print("New Token:", token)
-# queue = [get_state_by_name('Program')]
-id_counter = 2
-queue = [(get_state_by_name('Program'), 1)]
-adj = {}
-file = open('./syntax_errors.txt', 'w')
-has_syntax_error = False
-
-def remove_from_adj(id):
-    # print("removing ", id, " was called ")
-    for key in adj:
-        if id in adj[key][0]:
-            adj[key][0].remove(id)
-
-
-while True:
-    current_state = queue[0][0]
-    if current_state == '$':
-        adj[queue[0][1]] = ([], '$')
-        queue.pop(0)
-        break
-    if current_state == 'EPSILON':
-        adj[queue[0][1]] = ([], 'epsilon')
-        queue.pop(0)
-        continue
-    if current_state in Terminals:
-        if current_state == token.string:
-            adj[queue[0][1]] = ([], token)
-            queue.pop(0)
-            token = new_token()
-            ## print("New Token:", token)
-            continue
-        elif current_state == 'NUM':
-            if token.type == TokenType.NUM:
-                adj[queue[0][1]] = ([], token)
-                queue.pop(0)
-                token = new_token()
-                ## print("New Token:", token)
-                continue
-        elif current_state == 'ID':
-            if token.type == TokenType.ID:
-                adj[queue[0][1]] = ([], token)
-                queue.pop(0)
-                token = new_token()
-                ## print("New Token:", token)
-                continue
-        else:
-            token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
-                                                             TokenType.EOF] else token.string
-            file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
-            has_syntax_error = True
-            remove_from_adj(queue[0][1])
-            queue.pop(0)
-            continue
-    transition = transitions[current_state.value]
-    rule = transition.appliable(token)
-    if rule is None:
-        token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM, TokenType.EOF] else token.string
-        if token_value in FOLLOWS[current_state.value]:
-            file.write(f"#{token.line_number} : syntax error, missing {current_state.value} \n")
-            has_syntax_error = True
-            remove_from_adj(queue[0][1])
-            queue.pop(0)
-            continue
-        else:
-            if token.type == TokenType.EOF:
-                has_syntax_error = True
-                file.write(f"#{token.line_number} : syntax error, Unexpected {token_value} \n")
-                for i in range(len(queue)):
-                    remove_from_adj(queue[i][1])
-                break
-            file.write(f"#{token.line_number} : syntax error, illegal {token_value} \n")
-            token = new_token()
-            continue
-    else:
-        # print(rule.LHS, rule.RHS)
-        adj[queue[0][1]] = ([], rule.LHS.value)
-        new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
-        id_counter += len(rule.RHS)
-        if current_state.value == 'Program':
-            new_states.append(('$', id_counter + 1))
-            id_counter += 1
-        # adj[queue[0][1]][0].append([state[1] for state in new_states])
-        for state in new_states:
-            adj[queue[0][1]][0].append(state[1])
-        queue.pop(0)
-        queue = new_states + queue
-        ## print("new queue", queue)
-        # print(rule.LHS.value, '->',
-        #       ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
-if not has_syntax_error:
-    file.write("There is no syntax error.")
-file.close()
-# for key in adj:
-#     print(key, "->", adj[key][0])
 
 
 def get_name_of_children(adj, node):
@@ -329,13 +235,129 @@ def create_tree(adj: dict):
     return root
 
 
-def draw_tree(adj: dict):
+def draw_tree(adj: dict, addr: str):
     ori = sys.stdout
-    with open("parse_tree.txt", "w") as f:
+    with open(addr, "w") as f:
         sys.stdout = f
         root = create_tree(adj)
         for pre, fill, node in RenderTree(root):
             print("%s%s" % (pre, node.name))
     sys.stdout = ori
 
-draw_tree(adj)
+def main():
+    # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
+    test_cases = ['07']
+    for test_case in test_cases:
+        addr = './P2_testcases/T'+ test_case +'/'
+        file = open(addr + 'input.txt', 'r')
+        table = SymbolTable()
+        scanner = Scannerr(file.read(), table)
+        file.close()
+        token = new_token(scanner)
+        ## print("New Token:", token)
+        # queue = [get_state_by_name('Program')]
+        id_counter = 2
+        queue = [('Program', 1)]
+        adj = {}
+
+        file = open(addr + 'syntax_errors_result.txt', 'w')
+        has_syntax_error = False
+
+        while True:
+            current_state = queue[0][0]
+
+            if type(current_state) != str:
+                current_state = current_state.value
+
+            if current_state == 'ID':
+                print('mewo')
+                x = 2
+
+            if current_state == '$':
+                adj[queue[0][1]] = ([], '$')
+                queue.pop(0)
+                break
+            if current_state == 'EPSILON':
+                adj[queue[0][1]] = ([], 'epsilon')
+                queue.pop(0)
+                continue
+            if current_state in Terminals:
+                if current_state == token.string:
+                    adj[queue[0][1]] = ([], token)
+                    queue.pop(0)
+                    token = new_token(scanner)
+                    ## print("New Token:", token)
+                    continue
+                elif current_state == 'NUM':
+                    if token.type == TokenType.NUM:
+                        adj[queue[0][1]] = ([], token)
+                        queue.pop(0)
+                        token = new_token(scanner)
+                        ## print("New Token:", token)
+                        continue
+                elif current_state == 'ID':
+                    if token.type == TokenType.ID:
+                        adj[queue[0][1]] = ([], token)
+                        queue.pop(0)
+                        token = new_token(scanner)
+                        ## print("New Token:", token)
+                        continue
+                else:
+                    token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
+                                                                     TokenType.EOF] else token.string
+                    file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
+                    has_syntax_error = True
+                    remove_from_adj(queue[0][1], adj)
+                    queue.pop(0)
+                    continue
+
+            # value = current_state
+            # if type(current_state) is not str:
+            #     value = current_state.value
+
+            transition = transitions[current_state]
+            rule = transition.appliable(token)
+            if rule is None:
+                token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
+                                                                 TokenType.EOF] else token.string
+                if token_value in FOLLOWS[current_state]:
+                    file.write(f"#{token.line_number} : syntax error, missing {current_state} \n")
+                    has_syntax_error = True
+                    remove_from_adj(queue[0][1], adj)
+                    queue.pop(0)
+                    continue
+                else:
+                    if token.type == TokenType.EOF:
+                        has_syntax_error = True
+                        file.write(f"#{token.line_number} : syntax error, Unexpected {token_value} \n")
+                        for i in range(len(queue)):
+                            remove_from_adj(queue[i][1], adj)
+                        break
+                    file.write(f"#{token.line_number} : syntax error, illegal {token_value} \n")
+                    token = new_token(scanner)
+                    continue
+            else:
+                # print(rule.LHS, rule.RHS)
+                adj[queue[0][1]] = ([], rule.LHS.value)
+                new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
+                id_counter += len(rule.RHS)
+                if current_state == 'Program':
+                    new_states.append(('$', id_counter + 1))
+                    id_counter += 1
+                # adj[queue[0][1]][0].append([state[1] for state in new_states])
+                for state in new_states:
+                    adj[queue[0][1]][0].append(state[1])
+                queue.pop(0)
+                queue = new_states + queue
+                ## print("new queue", queue)
+                # print(rule.LHS.value, '->',
+                #       ' '.join([variable.value if type(variable) == States else variable for variable in rule.RHS]))
+        if not has_syntax_error:
+            file.write("There is no syntax error.")
+        file.close()
+        # for key in adj:
+        #     print(key, "->", adj[key][0])
+
+        draw_tree(adj, addr + 'parse_tree_result.txt')
+
+main()
