@@ -82,6 +82,7 @@ class States(Enum):
     Args = 'Args'
     Arg_list = 'Arg_list'
     Arg_list_prime = 'Arg_list_prime'
+    Out_stmt = 'Out_stmt'
 
 
 def get_state_by_name(name):

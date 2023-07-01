@@ -34,9 +34,13 @@
       ]
     ],
     "Var_declaration_prime": [
-      [";"],
+      [
+        "#DEC_VAR",
+        ";"
+      ],
       [
         "[",
+        "#DEC_ARR",
         "NUM",
         "]",
         ";"
@@ -52,7 +56,9 @@
     ],
     "Type_specifier": [
       [
-        "int"
+        "#PTYPE",
+        "int",
+        "#PID"
       ],
       [
         "void"
@@ -126,7 +132,10 @@
       ],
       [
         "Return_stmt"
-      ]
+      ],
+        [
+            "Out_stmt"
+        ]
     ],
     "Expression_stmt": [
       [
@@ -182,6 +191,7 @@
         "Simple_expression_zegond"
       ],
       [
+        "#PID",
         "ID",
         "B"
       ]
@@ -189,12 +199,14 @@
     "B": [
       [
         "=",
-        "Expression"
+        "Expression",
+        "#ASSIGN"
       ],
       [
         "[",
         "Expression",
         "]",
+        "#ARR_ACC",
         "H"
       ],
       [
@@ -226,8 +238,10 @@
     ],
     "C": [
       [
+        "#PUSHOP",
         "Relop",
-        "Additive_expression"
+        "Additive_expression",
+        "#COMP"
       ],
       [
         "EPSILON"
@@ -263,6 +277,7 @@
       [
         "Addop",
         "Term",
+        "#ADD_SUB",
         "D"
       ],
       [
@@ -271,9 +286,11 @@
     ],
     "Addop": [
       [
+        "#PUSHOP",
         "+"
       ],
       [
+        "#PUSHOP",
         "-"
       ]
     ],
@@ -299,6 +316,7 @@
       [
         "*",
         "Factor",
+        "#MUL",
         "G"
       ],
       [
@@ -312,10 +330,12 @@
         ")"
       ],
       [
+        "#PID",
         "ID",
         "Var_call_prime"
       ],
       [
+        "#PNUM",
         "NUM"
       ]
     ],
@@ -356,6 +376,7 @@
         ")"
       ],
       [
+        "#PNUM",
         "NUM"
       ]
     ],
@@ -382,5 +403,15 @@
       [
         "EPSILON"
       ]
+    ],
+    "Out_stmt": [
+        [
+            "output",
+            "(",
+            "Expression",
+            ")",
+            "#OUT",
+            ";"
+        ]
     ]
   }

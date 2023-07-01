@@ -164,7 +164,8 @@
         "Arg_list": [
             "ID", "NUM", "("
         ],
-        "Arg_list_prime": [",", "EPSILON"]
+        "Arg_list_prime": [",", "EPSILON"],
+        "Out_stmt": ["output"]
     },
     "follow": {
         "Program": ["$"],
@@ -340,6 +341,22 @@
             "return"
         ],
         "Return_stmt": [
+            "ID",
+            ";",
+            "NUM",
+            "(",
+            "int",
+            "void",
+            "{",
+            "}",
+            "break",
+            "if",
+            "else",
+            "repeat",
+            "until",
+            "return"
+        ],
+        "Out_stmt": [
             "ID",
             ";",
             "NUM",
