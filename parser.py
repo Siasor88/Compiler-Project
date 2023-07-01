@@ -1,6 +1,8 @@
 # create an enum with choices a and b and c
 import sys
 from enum import Enum
+
+from codegen import CodeGenerator
 from compiler import Scannerr, Token, SymbolTable, TokenType
 import json
 from anytree import Node, RenderTree
@@ -18,13 +20,8 @@ file.close()
 # f.close()
 tokens = []
 errors = []
+codegenerator = CodeGenerator()
 
-
-# nodex = Node('ali')
-# nodee = Node('ali', parent=nodex)
-# nodee = Node('ali', parent=nodex)
-# for pre, fill, node in RenderTree(nodex):
-#     print("%s%s" % (pre, node.name))
 
 
 def new_token(scanner: Scannerr):
@@ -184,6 +181,7 @@ def remove_from_adj(id, adj):
         if id in adj[key][0]:
             adj[key][0].remove(id)
 
+
 # creating transitions and rules from the production.json file
 file = open('./Productions.json')
 json_file = json.load(file)
@@ -200,13 +198,13 @@ for initial_state in States:
         transition.rules.append(rule)
     transitions[initial_state.value] = transition
 
+
 # rule = transitions['Term_prime'].rules[0]
 # print(rule.LHS, rule.RHS)
 # token = Token(TokenType.SYMBOL, "*",5)
 # print(rule.appliable(token))
 # # exit the program
 # exit(0)
-
 
 
 def get_name_of_children(adj, node):
@@ -244,11 +242,12 @@ def draw_tree(adj: dict, addr: str):
             print("%s%s" % (pre, node.name))
     sys.stdout = ori
 
+
 def main():
     test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    #test_cases = ['07']
+    # test_cases = ['07']
     for test_case in test_cases:
-        addr = './P2_testcases/T'+ test_case +'/'
+        addr = './P2_testcases/T' + test_case + '/'
         file = open(addr + 'input.txt', 'r')
         table = SymbolTable()
         scanner = Scannerr(file.read(), table)
@@ -268,7 +267,10 @@ def main():
 
             if type(current_state) != str:
                 current_state = current_state.value
-                
+            #if current state starts with # run the action
+            if current_state[0] == '#':
+                codegenerator.call_routine(current_state[1:], token)
+
             if current_state == '$':
                 adj[queue[0][1]] = ([], '$')
                 queue.pop(0)
@@ -323,7 +325,8 @@ def main():
                 else:
                     if token.type == TokenType.EOF:
                         has_syntax_error = True
-                        file.write(f"#{token.line_number} : syntax error, Unexpected {str(token_value).replace('_', '-')}\n")
+                        file.write(
+                            f"#{token.line_number} : syntax error, Unexpected {str(token_value).replace('_', '-')}\n")
                         for i in range(len(queue)):
                             remove_from_adj(queue[i][1], adj)
                         break
@@ -353,5 +356,6 @@ def main():
         #     print(key, "->", adj[key][0])
 
         draw_tree(adj, addr + 'parse_tree_result.txt')
+
 
 main()
