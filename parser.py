@@ -7,7 +7,7 @@ from compiler import Scannerr, Token, SymbolTable, TokenType
 import json
 from anytree import Node, RenderTree
 
-file = open('./First_Follows.json')
+file = open('./Resources/First_Follows.json')
 
 json_file = json.load(file)
 FIRSTS, FOLLOWS = json_file['first'], json_file['follow']
@@ -20,8 +20,6 @@ file.close()
 # f.close()
 tokens = []
 errors = []
-codegenerator = CodeGenerator()
-
 
 
 def new_token(scanner: Scannerr):
@@ -100,7 +98,7 @@ class Rule:
     def appliable(self, token: Token):
         token_value = self.get_token_value(token)
         if token_value in FIRSTS[self.LHS.value]:
-            variable = self.RHS[0]
+            variable = self.RHS[0] if not str(self.RHS[0])[0] == '#' else self.RHS[1]
             if variable in Terminals:
                 if variable == token_value:
                     return True
@@ -111,21 +109,11 @@ class Rule:
                 return True
             elif token_value in FOLLOWS[variable.value] and 'EPSILON' in FIRSTS[variable.value]:
                 return True
-            # if variable in Terminals:
-            #     if variable == token_value:
-            #         return True
-            #     elif variable == 'EPSILON':
-            #         if token_value in FOLLOWS[self.LHS.value]:
-            #             return True
-            # elif token_value in FIRSTS[variable.value]:
-            #     return True
-            # elif token_value in FOLLOWS[variable.value]:
-            #     return True
-            # else:
-            #     return False
         if token_value in FOLLOWS[self.LHS.value] and 'EPSILON' in FIRSTS[self.LHS.value]:
             flag = True
             for variable in self.RHS:
+                if str(variable)[0] == '#':
+                    continue
                 if variable in Terminals:
                     if variable == 'EPSILON':
                         continue
@@ -151,6 +139,8 @@ def create_rule_from_production(state, path):
     for variable in path:
         if get_state_by_name(variable) is not None:
             rhs.append(get_state_by_name(variable))
+        elif variable[0] == '#':
+            rhs.append(variable)
         elif variable in Terminals:
             rhs.append(variable)
     the_rule = Rule(state, rhs)
@@ -171,6 +161,12 @@ class Transition:
 
     def appliable(self, token: Token):
         for rule in self.rules:
+            if self.variable.value == 'Statement' and rule.RHS[0].value == 'Out_stmt':
+                if token.string == 'output':
+                    # print("DONE######")
+                    return rule
+            if self.variable.value == 'Out_stmt' and token.string == 'output':
+                return rule
             if rule.appliable(token):
                 return rule
         return None
@@ -184,7 +180,7 @@ def remove_from_adj(id, adj):
 
 
 # creating transitions and rules from the production.json file
-file = open('./Productions.json')
+file = open('./Resources/Productions.json')
 json_file = json.load(file)
 file.close()
 productions = json_file
@@ -196,6 +192,9 @@ for initial_state in States:
     transition = Transition(initial_state, [])
     for production in productions[initial_state.value]:
         rule = create_rule_from_production(initial_state, production)
+        # if initial_state.value == 'Expression':
+        #     print(production)
+        #     print(rule.LHS, rule.RHS)
         transition.rules.append(rule)
     transitions[initial_state.value] = transition
 
@@ -245,17 +244,18 @@ def draw_tree(adj: dict, addr: str):
 
 
 def main():
-    test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    # test_cases = ['07']
+    # for rule in transitions['Expression'].rules:
+    #     print(rule.LHS, rule.RHS)
+    # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
+    test_cases = ['1']
     for test_case in test_cases:
-        addr = './P2_testcases/T' + test_case + '/'
+        addr = './P3_testcases/T' + test_case + '/'
         file = open(addr + 'input.txt', 'r')
         table = SymbolTable()
         scanner = Scannerr(file.read(), table)
+        codegenerator = CodeGenerator()
         file.close()
         token = new_token(scanner)
-        ## print("New Token:", token)
-        # queue = [get_state_by_name('Program')]
         id_counter = 2
         queue = [('Program', 1)]
         adj = {}
@@ -265,12 +265,14 @@ def main():
 
         while True:
             current_state = queue[0][0]
-
+            # print("current state",current_state)
             if type(current_state) != str:
                 current_state = current_state.value
-            #if current state starts with # run the action
+            # if current state starts with # run the action
             if current_state[0] == '#':
                 codegenerator.call_routine(current_state[1:], token)
+                queue.pop(0)
+                continue
 
             if current_state == '$':
                 adj[queue[0][1]] = ([], '$')
@@ -308,9 +310,6 @@ def main():
                     queue.pop(0)
                     continue
 
-            # value = current_state
-            # if type(current_state) is not str:
-            #     value = current_state.value
 
             transition = transitions[current_state]
             rule = transition.appliable(token)
@@ -335,7 +334,7 @@ def main():
                     token = new_token(scanner)
                     continue
             else:
-                # print(rule.LHS, rule.RHS)
+                # print(rule.LHS, "------>" ,rule.RHS)
                 adj[queue[0][1]] = ([], rule.LHS.value)
                 new_states = [(variable, id_counter + i + 1) for i, variable in enumerate(rule.RHS)]
                 id_counter += len(rule.RHS)
@@ -353,10 +352,16 @@ def main():
         if not has_syntax_error:
             file.write("There is no syntax error.")
         file.close()
-        # for key in adj:
-        #     print(key, "->", adj[key][0])
 
-        draw_tree(adj, addr + 'parse_tree_result.txt')
+
+        # draw_tree(adj, addr + 'parse_tree_result.txt')
+        file = open(addr + 'generated_code.txt', 'w')
+        final_ind = codegenerator.PC
+        print("final dest", final_ind)
+        for i in range(final_ind):
+            file.write(codegenerator.PB[i])
+            file.write('\n')
+        file.close()
 
 
 main()

@@ -56,9 +56,9 @@
     ],
     "Type_specifier": [
       [
-        "#PTYPE",
+        "#PUSH_TYPE",
         "int",
-        "#PID"
+        "#PIDN"
       ],
       [
         "void"
@@ -119,6 +119,9 @@
     ],
     "Statement": [
       [
+         "Out_stmt"
+      ],
+      [
         "Expression_stmt"
       ],
       [
@@ -132,10 +135,7 @@
       ],
       [
         "Return_stmt"
-      ],
-        [
-            "Out_stmt"
-        ]
+      ]
     ],
     "Expression_stmt": [
       [
@@ -241,7 +241,7 @@
         "#PUSHOP",
         "Relop",
         "Additive_expression",
-        "#COMP"
+        "#CMP"
       ],
       [
         "EPSILON"
@@ -406,11 +406,11 @@
     ],
     "Out_stmt": [
         [
-            "output",
+            "ID",
             "(",
             "Expression",
             ")",
-            "#OUT",
+            "#OUTPUT",
             ";"
         ]
     ]
