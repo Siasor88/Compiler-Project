@@ -247,7 +247,7 @@ def main():
     # for rule in transitions['Expression'].rules:
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    test_cases = ['1']
+    test_cases = [str(i) for i in range(1,11)]
     for test_case in test_cases:
         addr = './P3_testcases/T' + test_case + '/'
         file = open(addr + 'input.txt', 'r')
