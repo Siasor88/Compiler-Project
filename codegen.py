@@ -56,8 +56,9 @@ class CodeGenerator:
         self.symbol_table.append([name, var_type, t1])
         return
 
-    def dec_arr(self, next_token):
-        size = int(next_token)
+    def dec_arr(self, token):
+        token_value = get_token_value(token)
+        size = int(token_value)
         name = self.SS[-1]
         self.SS.pop()
         address = self.get_temp()
@@ -186,7 +187,8 @@ class CodeGenerator:
 
     def until_jump(self, token):
         condition = self.SS[-1]
-        repeat_addr = self.SS[-2]
+        repeat_addr = int(self.SS[-2])
+
         tmp_var = self.get_temp()
         self.generate_code('ASSIGN', '#0', tmp_var, loc=repeat_addr)
         self.generate_code('JPF', condition, str(repeat_addr))
@@ -194,7 +196,6 @@ class CodeGenerator:
         for i in reversed(range(len(self.break_states))):
             if self.break_states[i] == "new-break":
                 last_break = i
-                #TODO Check here u may need a break here
                 break
         print(last_break)
         breaks = self.break_states[last_break + 1:]
