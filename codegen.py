@@ -12,6 +12,7 @@ def get_token_value(token: Token):
 class CodeGenerator:
     def __init__(self):
         self.symbol_table = []
+        self.break_states = []
         self.SS = list()
         self.PB = {}
         self.PC = 0
@@ -26,10 +27,12 @@ class CodeGenerator:
         print(routine_name, token)
         self.__getattribute__(routine_name.lower())(token)
 
-    def generate_code(self, inst, arg1, arg2='', arg3=''):
-        self.PB[self.PC] = f'{self.PC}\t({inst}, {arg1}, {arg2}, {arg3})'
-        print("Generating code", self.PB[self.PC])
-        self.PC += 1
+    def generate_code(self, inst, arg1, arg2='', arg3='', loc: int = -1):
+        if loc == -1:
+            loc = self.PC
+            self.PC += 1
+        self.PB[loc] = f'{loc}\t({inst}, {arg1}, {arg2}, {arg3})'
+        print("Generating code", self.PB[loc])
 
     def get_temp(self, size=1):
         start_address = str(self.current_address)
@@ -51,6 +54,7 @@ class CodeGenerator:
         self.pop(2)
         t1 = self.get_temp()
         self.symbol_table.append([name, var_type, t1])
+        return
 
     def dec_arr(self, next_token):
         size = int(next_token)
@@ -60,6 +64,7 @@ class CodeGenerator:
         array_mem = self.get_temp(int(size))
         self.generate_code('ASSIGN', f'#{array_mem}', address)
         self.symbol_table.append([name, 'array', address])
+        return
 
     def mul(self, token):
         operand1 = self.SS[-1]
@@ -74,7 +79,7 @@ class CodeGenerator:
     def push_type(self, token):
         token_value = get_token_value(token)
         self.SS.append(token_value)
-        pass
+        return
 
     def pid(self, token):
         token_value = get_token_value(token)
@@ -95,7 +100,7 @@ class CodeGenerator:
         index = self.SS[-1]
         array_address = self.SS[-2]
         self.pop(2)
-        tmp1, tmp2 = self.get_temp(),self.get_temp()
+        tmp1, tmp2 = self.get_temp(), self.get_temp()
         self.generate_code('MUL', index, '#4', tmp1)
         self.generate_code('ADD', tmp1, array_address, tmp2)
         self.SS.append(f'@{tmp2}')
@@ -115,7 +120,7 @@ class CodeGenerator:
         self.generate_code(operator, operand1, operand2, tmp_var)
         self.pop(3)
         self.SS.append(tmp_var)
-        pass
+        return
 
     def add_sub(self, token):
         operand1 = self.SS[-1]
@@ -133,7 +138,7 @@ class CodeGenerator:
         tmp_var = self.get_temp()
         token_value = get_token_value(token)
         self.generate_code('ASSIGN', '#' + token_value, tmp_var)
-        #TODO check here
+        # TODO check here
         self.SS.append(tmp_var)
         return
 
@@ -151,6 +156,52 @@ class CodeGenerator:
         self.SS.append(token_value)
         return
 
+    def save_index(self, token):
+        self.SS.append(self.PC)
+        self.PC += 1
+        return
 
+    def jpf(self, token):
+        jump_add = self.SS[-1]
+        condition = self.SS[-2]
+        self.generate_code('JPF', condition, str(self.PC + 1), loc=jump_add)
+        self.save_index(token)
+        self.pop(2)
+        return
 
+    def jump(self, token):
+        jump_add = self.SS[-1]
+        self.generate_code('JP', str(self.PC), loc=jump_add)
+        return
 
+    def save_break_address(self, lookahead):
+        self.break_states.append(self.PC)
+        self.PC += 1
+        return
+
+    def add_to_breaks_save(self, token):
+        self.break_states.append("new-break")
+        self.save_index(token)
+        return
+
+    def until_jump(self, token):
+        condition = self.SS[-1]
+        repeat_addr = self.SS[-2]
+        tmp_var = self.get_temp()
+        self.generate_code('ASSIGN', '#0', tmp_var, loc=repeat_addr)
+        self.generate_code('JPF', condition, str(repeat_addr))
+        last_break = 0
+        for i in reversed(range(len(self.break_states))):
+            if self.break_states[i] == "new-break":
+                last_break = i
+                #TODO Check here
+                break
+        print(last_break)
+        breaks = self.break_states[last_break + 1:]
+        print(breaks)
+        print(self.break_states)
+        for i in self.break_states[last_break + 1:]:
+            self.generate_code('JP', self.PC, loc=i)
+        self.break_states = self.break_states[:last_break]
+        self.pop(2)
+        return
