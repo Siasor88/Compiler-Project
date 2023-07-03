@@ -77,21 +77,22 @@ class CodeGenerator:
 
         print(f'Pushed to Stack at function mul value: {tmp_var}')
         self.SS.append(tmp_var)
+        print("Stack after this push:", self.SS)
         return
 
     def push_type(self, token):
         token_value = get_token_value(token)
         print(f'Pushed to Stack at function push_type value: {token_value}')
         self.SS.append(token_value)
+        print("Stack after this push:", self.SS)
         return
 
     def pid(self, token):
         token_value = get_token_value(token)
         addr = self.get_address(token_value)
-        print("pushing name", token_value, addr)
-        # print("Symbol table", self.symbol_table)
         print(f'Pushed to Stack at function pid value: {addr}')
         self.SS.append(addr)
+        print("Stack after this push:", self.SS)
         return
 
     def assign(self, token):
@@ -115,12 +116,14 @@ class CodeGenerator:
         self.generate_code('ADD', tmp1, array_address, tmp2)
         print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
+        print("Stack after this push:", self.SS)
         pass
 
     def pushop(self, token):
         token_value = get_token_value(token)
         print(f'Pushed to Stack at function pushop value: {token_value}')
         self.SS.append(token_value)
+        print("Stack after this push:", self.SS)
         return
 
     def cmp(self, token):
@@ -134,6 +137,7 @@ class CodeGenerator:
 
         print(f'Pushed to Stack at function cmp value: {tmp_var}')
         self.SS.append(tmp_var)
+        print("Stack after this push:", self.SS)
         return
 
     def add_sub(self, token):
@@ -147,6 +151,7 @@ class CodeGenerator:
         self.generate_code(operator, operand1, operand2, tmp_var)
         print(f'Pushed to Stack at function add_sub value: {tmp_var}')
         self.SS.append(tmp_var)
+        print("Stack after this push:", self.SS)
         return
 
     def pnum(self, token):
@@ -156,6 +161,7 @@ class CodeGenerator:
         # TODO check here
         print(f'Pushed to Stack at function pnum value: {tmp_var}')
         self.SS.append(tmp_var)
+        print("Stack after this push:", self.SS)
         return
 
     def output(self, token):
@@ -171,11 +177,13 @@ class CodeGenerator:
         token_value = get_token_value(token)
         print(f'Pushed to Stack at function pidn value: {token_value}')
         self.SS.append(token_value)
+        print("Stack after this push:", self.SS)
         return
 
     def save_index(self, token):
         print(f'Pushed to Stack at function save_index value: {self.PC}')
         self.SS.append(self.PC)
+        print("Stack after this push:", self.SS)
         self.PC += 1
         return
 

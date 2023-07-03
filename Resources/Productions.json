@@ -222,7 +222,8 @@
     "H": [
       [
         "=",
-        "Expression"
+        "Expression",
+        "#ASSIGN"
       ],
       [
         "G",
