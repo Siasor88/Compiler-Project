@@ -248,6 +248,7 @@ def main():
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
     test_cases = [str(i) for i in range(1,11)]
+    test_cases = ['3']
     for test_case in test_cases:
         addr = './P3_testcases/T' + test_case + '/'
         file = open(addr + 'input.txt', 'r')
@@ -361,6 +362,8 @@ def main():
         for i in range(final_ind):
             file.write(codegenerator.PB[i])
             file.write('\n')
+
+        print()
         file.close()
 
 

@@ -60,7 +60,7 @@ class CodeGenerator:
         token_value = get_token_value(token)
         size = int(token_value)
         name = self.SS[-1]
-        self.SS.pop()
+        self.pop(2)
         address = self.get_temp()
         array_mem = self.get_temp(int(size))
         self.generate_code('ASSIGN', f'#{array_mem}', address)
@@ -70,15 +70,18 @@ class CodeGenerator:
     def mul(self, token):
         operand1 = self.SS[-1]
         operand2 = self.SS[-2]
+        self.pop(2)
         operator = 'MUL'
         tmp_var = self.get_temp()
         self.generate_code(operator, operand1, operand2, tmp_var)
-        self.pop(2)
+
+        print(f'Pushed to Stack at function mul value: {tmp_var}')
         self.SS.append(tmp_var)
         return
 
     def push_type(self, token):
         token_value = get_token_value(token)
+        print(f'Pushed to Stack at function push_type value: {token_value}')
         self.SS.append(token_value)
         return
 
@@ -87,6 +90,7 @@ class CodeGenerator:
         addr = self.get_address(token_value)
         print("pushing name", token_value, addr)
         # print("Symbol table", self.symbol_table)
+        print(f'Pushed to Stack at function pid value: {addr}')
         self.SS.append(addr)
         return
 
@@ -104,11 +108,13 @@ class CodeGenerator:
         tmp1, tmp2 = self.get_temp(), self.get_temp()
         self.generate_code('MUL', index, '#4', tmp1)
         self.generate_code('ADD', tmp1, array_address, tmp2)
+        print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
         pass
 
     def pushop(self, token):
         token_value = get_token_value(token)
+        print(f'Pushed to Stack at function pushop value: {token_value}')
         self.SS.append(token_value)
         return
 
@@ -116,10 +122,12 @@ class CodeGenerator:
         operand2 = self.SS[-1]
         operator = self.SS[-2]
         operand1 = self.SS[-3]
+        self.pop(3)
         tmp_var = self.get_temp()
         operator = 'EQ' if operator == '==' else 'LT'
         self.generate_code(operator, operand1, operand2, tmp_var)
-        self.pop(3)
+
+        print(f'Pushed to Stack at function cmp value: {tmp_var}')
         self.SS.append(tmp_var)
         return
 
@@ -127,11 +135,12 @@ class CodeGenerator:
         operand1 = self.SS[-1]
         operator = self.SS[-2]
         operand2 = self.SS[-3]
+        self.pop(3)
         print(operand1, operator, operand2)
         tmp_var = self.get_temp()
         operator = 'ADD' if operator == '+' else 'SUB'
         self.generate_code(operator, operand1, operand2, tmp_var)
-        self.pop(3)
+        print(f'Pushed to Stack at function add_sub value: {tmp_var}')
         self.SS.append(tmp_var)
         return
 
@@ -140,13 +149,14 @@ class CodeGenerator:
         token_value = get_token_value(token)
         self.generate_code('ASSIGN', '#' + token_value, tmp_var)
         # TODO check here
+        print(f'Pushed to Stack at function pnum value: {tmp_var}')
         self.SS.append(tmp_var)
         return
 
     def output(self, token):
         expression = self.SS[-1]
-        self.generate_code('PRINT', expression)
         self.pop()
+        self.generate_code('PRINT', expression)
         return
 
     def print_symbol_table(self):
@@ -154,10 +164,12 @@ class CodeGenerator:
 
     def pidn(self, token):
         token_value = get_token_value(token)
+        print(f'Pushed to Stack at function pidn value: {token_value}')
         self.SS.append(token_value)
         return
 
     def save_index(self, token):
+        print(f'Pushed to Stack at function save_index value: {self.PC}')
         self.SS.append(self.PC)
         self.PC += 1
         return
@@ -165,13 +177,15 @@ class CodeGenerator:
     def jpf(self, token):
         jump_add = self.SS[-1]
         condition = self.SS[-2]
+        self.pop(2)
         self.generate_code('JPF', condition, str(self.PC + 1), loc=jump_add)
         self.save_index(token)
-        self.pop(2)
+
         return
 
     def jump(self, token):
         jump_add = self.SS[-1]
+        self.pop()
         self.generate_code('JP', str(self.PC), loc=jump_add)
         return
 
@@ -188,7 +202,7 @@ class CodeGenerator:
     def until_jump(self, token):
         condition = self.SS[-1]
         repeat_addr = int(self.SS[-2])
-
+        self.pop(2)
         tmp_var = self.get_temp()
         self.generate_code('ASSIGN', '#0', tmp_var, loc=repeat_addr)
         self.generate_code('JPF', condition, str(repeat_addr))
@@ -204,5 +218,5 @@ class CodeGenerator:
         for i in self.break_states[last_break + 1:]:
             self.generate_code('JP', self.PC, loc=i)
         self.break_states = self.break_states[:last_break]
-        self.pop(2)
+
         return
