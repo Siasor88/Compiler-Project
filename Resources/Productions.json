@@ -145,7 +145,8 @@
       ],
       [
         "break",
-        ";"
+        ";",
+        "#SAVE_BREAK_ADDR"
       ],
       [
         ";"
@@ -360,7 +361,8 @@
       [
         "[",
         "Expression",
-        "]"
+        "]",
+        "#ARR_ACC"
       ],
       [
         "EPSILON"

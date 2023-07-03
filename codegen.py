@@ -203,13 +203,13 @@ class CodeGenerator:
         self.generate_code('JP', str(self.PC), loc=jump_add)
         return
 
-    def save_break_address(self, lookahead):
+    def save_break_addr(self, lookahead):
         self.break_states.append(self.PC)
         self.PC += 1
         return
 
     def add_to_breaks_save(self, token):
-        self.break_states.append("new-break")
+        self.break_states.append("new-block")
         self.save_index(token)
         return
 
