@@ -16,7 +16,7 @@ class CodeGenerator:
         self.SS = list()
         self.PB = {}
         self.PC = 0
-        self.current_address = 1000
+        self.current_address = 500
 
     def pop(self, n: int = 1):
         for i in range(n):
@@ -71,7 +71,7 @@ class CodeGenerator:
         operand1 = self.SS[-1]
         operand2 = self.SS[-2]
         self.pop(2)
-        operator = 'MUL'
+        operator = 'MULT'
         tmp_var = self.get_temp()
         self.generate_code(operator, operand1, operand2, tmp_var)
 
@@ -112,7 +112,7 @@ class CodeGenerator:
         array_address = self.SS[-2]
         self.pop(2)
         tmp1, tmp2 = self.get_temp(), self.get_temp()
-        self.generate_code('MUL', index, '#4', tmp1)
+        self.generate_code('MULT', index, '#4', tmp1)
         self.generate_code('ADD', tmp1, array_address, tmp2)
         print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
@@ -148,7 +148,8 @@ class CodeGenerator:
         print(operand1, operator, operand2)
         tmp_var = self.get_temp()
         operator = 'ADD' if operator == '+' else 'SUB'
-        self.generate_code(operator, operand1, operand2, tmp_var)
+
+        self.generate_code(operator, operand2, operand1, tmp_var)
         print(f'Pushed to Stack at function add_sub value: {tmp_var}')
         self.SS.append(tmp_var)
         print("Stack after this push:", self.SS)

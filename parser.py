@@ -247,10 +247,11 @@ def main():
     # for rule in transitions['Expression'].rules:
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    test_cases = [str(i) for i in range(1,11)]
-    test_cases = ['9']
+    test_cases = [str(i) for i in range(1, 11)]
+    test_cases = ['3']
     for test_case in test_cases:
         addr = './P3_testcases/T' + test_case + '/'
+        # addr = './'
         file = open(addr + 'input.txt', 'r')
         table = SymbolTable()
         scanner = Scannerr(file.read(), table)
@@ -311,7 +312,6 @@ def main():
                     queue.pop(0)
                     continue
 
-
             transition = transitions[current_state]
             rule = transition.appliable(token)
             if rule is None:
@@ -354,15 +354,13 @@ def main():
             file.write("There is no syntax error.")
         file.close()
 
-
         # draw_tree(adj, addr + 'parse_tree_result.txt')
-        file = open(addr + 'generated_code.txt', 'w')
+        file = open(addr + 'output.txt', 'w')
         final_ind = codegenerator.PC
         print("final dest", final_ind)
         for i in range(final_ind):
             file.write(codegenerator.PB[i])
             file.write('\n')
-        print()
         file.close()
 
 
