@@ -99,6 +99,11 @@ class CodeGenerator:
         operand2 = self.SS[-2]
         self.pop(2)
         self.generate_code('ASSIGN', operand1, operand2)
+        self.SS.append(operand2)
+        return
+
+    def pop_extra(self, token):
+        self.pop()
         return
 
     def arr_acc(self, token):

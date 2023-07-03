@@ -140,7 +140,8 @@
     "Expression_stmt": [
       [
         "Expression",
-        ";"
+        ";",
+        "#POP_EXTRA"
       ],
       [
         "break",
