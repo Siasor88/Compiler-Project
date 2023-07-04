@@ -49,9 +49,13 @@
     "Fun_declaration_prime": [
       [
         "(",
+        "#GET_PARAMS",
         "Params",
         ")",
-        "Compound_stmt"
+        "#CREATE_FUNCTION_FRAME",
+        "#CREATE_NEW_RETURN_SCOPE",
+        "Compound_stmt",
+        "#FILL_RETURNS"
       ]
     ],
     "Type_specifier": [
@@ -66,7 +70,9 @@
     ],
     "Params": [
       [
+        "#PUSH_TYPE",
         "int",
+        "#PID",
         "ID",
         "Param_prime",
         "Param_list"
@@ -94,18 +100,22 @@
     "Param_prime": [
       [
         "[",
+        "#ADD_PARAM_ARRAY",
         "]"
       ],
       [
+        "#ADD_PARAM",
         "EPSILON"
       ]
     ],
     "Compound_stmt": [
       [
+        "#DEFINE_NEW_SCOPE",
         "{",
         "Declaration_list",
         "Statement_list",
-        "}"
+        "}",
+        "#END_SCOPE"
       ]
     ],
     "Statement_list": [
@@ -181,7 +191,8 @@
     "Return_stmt": [
       [
         "return",
-        "Return_stmt_prime"
+        "Return_stmt_prime",
+        "#SAVE_RETURN"
       ]
     ],
     "Return_stmt_prime": [

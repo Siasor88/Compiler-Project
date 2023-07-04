@@ -8,14 +8,21 @@ def get_token_value(token: Token):
     #                                                  TokenType.EOF] else token.string
     return token.string
 
+# class Function:
+#     def __init__(self, name, return_type, params, return_value, return_addr, start_addr, local_vars, scope):
+#         pass
 
 class CodeGenerator:
     def __init__(self):
         self.symbol_table = []
         self.break_states = []
+        self.return_states = []
+        self.params = []
+        self.current_scope = 0
         self.SS = list()
         self.PB = {}
         self.PC = 0
+        self.function_table = {}
         self.current_address = 500
 
     def pop(self, n: int = 1):
@@ -41,19 +48,27 @@ class CodeGenerator:
             self.current_address += variable_size
         return start_address
 
-    def get_address(self, name):
+    def get_address(self, name, scope=-1):
+        if scope == -1:
+            scope = self.current_scope
         if name == 'output':
             return 'output'
+        print(f"Current Symbol Table {self.symbol_table}")
+        print(f"Current Scope: {self.current_scope}")
+        candidates = []
         for i in self.symbol_table:
             if i[0] == name:
-                return i[2]
+                candidates.append((i[3], i[2]))
+        candidates.sort()
+        print(f"Candidates: {candidates}")
+        return candidates[-1][1]
 
     def dec_var(self, next_token):
         name = self.SS[-1]
         var_type = self.SS[-2]
         self.pop(2)
         t1 = self.get_temp()
-        self.symbol_table.append([name, var_type, t1])
+        self.symbol_table.append([name, var_type, t1, self.current_scope, variable_size])
         return
 
     def dec_arr(self, token):
@@ -64,7 +79,7 @@ class CodeGenerator:
         address = self.get_temp()
         array_mem = self.get_temp(int(size))
         self.generate_code('ASSIGN', f'#{array_mem}', address)
-        self.symbol_table.append([name, 'array', address])
+        self.symbol_table.append([name, 'array', address, self.current_scope, size * variable_size])
         return
 
     def mul(self, token):
@@ -233,4 +248,70 @@ class CodeGenerator:
             self.generate_code('JP', self.PC, loc=i)
         self.break_states = self.break_states[:last_break]
 
+        return
+
+    def get_params(self, token):
+        self.params = []
+        return
+
+    def create_function_frame(self, token):
+        return_addr = self.get_temp()
+        start_addr = self.PC
+        func_params = self.params
+        function_name = self.SS[-1]
+        function_return_type = self.SS[-2]
+        scope = self.current_scope
+        function_return_value = self.get_temp()
+        self.function_table[(function_name, scope)] = {
+            'name': function_name,
+            'return_addr': return_addr,
+            'return_type': function_return_type,
+            'return_value': function_return_value,
+            'start_addr': start_addr,
+            'params': func_params,
+            'scope': scope,
+            'local_vars': []
+        }
+        # self.symbol_table.append([function_name, 'function', (function_name, scope), self.current_scope, -1])
+        return
+
+    def create_new_return_scope(self, token):
+        self.return_states.append('new_scope')
+        return
+
+    def save_return(self, token):
+        self.return_states.append()
+        pass
+
+    def fill_returns(self, token):
+        pass
+
+    def add_param(self, token):
+        param_type = self.SS[-2]
+        param_name = self.SS[-1]
+        self.pop(2)
+        param_addr = self.get_temp()
+        self.params.append([param_name, param_type, param_addr, self.current_scope + 1, variable_size])
+        self.symbol_table.append([param_name, param_type, param_addr, self.current_scope + 1, variable_size])
+        return
+
+    def add_param_array(self, token):
+        param_type = self.SS[-2]
+        param_name = self.SS[-1]
+        self.pop(2)
+        param_addr = self.get_temp()
+        self.params.append([param_name, 'array', param_addr, self.current_scope + 1, -1])
+        self.symbol_table.append([param_name, 'array', param_addr, self.current_scope + 1, -1])
+        return
+
+    def define_new_scope(self, token):
+        self.current_scope += 1
+
+    def end_scope(self, token):
+        for element in reversed(self.symbol_table):
+            if element[3] == self.current_scope:
+                self.symbol_table.remove(element)
+                self.current_address -= element[4]
+        self.current_scope -= -1
+        #TODO
         return
