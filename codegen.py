@@ -1,4 +1,4 @@
-from compiler import SymbolTable, Token, TokenType
+from scanner import SymbolTable, Token, TokenType
 
 variable_size = 4
 
@@ -7,6 +7,7 @@ def get_token_value(token: Token):
     # token_value = token.type.value if token.type in [TokenType.ID, TokenType.NUM,
     #                                                  TokenType.EOF] else token.string
     return token.string
+
 
 # class Function:
 #     def __init__(self, name, return_type, params, return_value, return_addr, start_addr, local_vars, scope):
@@ -21,9 +22,10 @@ class CodeGenerator:
         self.current_scope = 0
         self.SS = list()
         self.PB = {}
-        self.PC = 0
+        self.PC = 1
         self.function_table = {}
         self.current_address = 500
+        self.current_function_name = ''
 
     def pop(self, n: int = 1):
         for i in range(n):
@@ -259,6 +261,9 @@ class CodeGenerator:
         start_addr = self.PC
         func_params = self.params
         function_name = self.SS[-1]
+        if function_name == 'main':
+            self.generate_code('JP', self.PC, loc=0)
+            self.PC += 1
         function_return_type = self.SS[-2]
         scope = self.current_scope
         function_return_value = self.get_temp()
@@ -272,6 +277,9 @@ class CodeGenerator:
             'scope': scope,
             'local_vars': []
         }
+        #TODO: do we need to pop these?
+        #self.pop(2)
+        self.current_function_name = function_name
         # self.symbol_table.append([function_name, 'function', (function_name, scope), self.current_scope, -1])
         return
 
@@ -280,10 +288,21 @@ class CodeGenerator:
         return
 
     def save_return(self, token):
-        self.return_states.append()
+        self.return_states.append(self.PC)
         pass
 
     def fill_returns(self, token):
+        #find the last "new-scope" in return states
+        last_scope = 0
+        for i in reversed(range(len(self.return_states))):
+            if self.return_states[i] == "new_scope":
+                last_scope = i
+                break
+        locations = self.return_states[last_scope + 1:]
+        locations.append(self.PC)
+        self.PC += 1
+        for j in locations:
+            self.generate_code('JP', self.function_table[(self.current_function_name, self.current_scope)]['return_addr'], loc=j)
         pass
 
     def add_param(self, token):
@@ -313,5 +332,5 @@ class CodeGenerator:
                 self.symbol_table.remove(element)
                 self.current_address -= element[4]
         self.current_scope -= -1
-        #TODO
+        # TODO
         return
