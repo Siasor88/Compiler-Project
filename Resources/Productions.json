@@ -364,7 +364,8 @@
       [
         "(",
         "Args",
-        ")"
+        ")",
+        "#CALL_FUNCTION"
       ],
       [
         "Var_prime"

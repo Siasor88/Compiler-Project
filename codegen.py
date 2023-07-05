@@ -24,6 +24,7 @@ class CodeGenerator:
         self.SS = list()
         self.PB = {}
         self.PC = 2
+        self.arg_collector = []
         self.function_table = {}
         self.current_address = 500
         self.current_function_name = ''
@@ -345,3 +346,51 @@ class CodeGenerator:
         self.current_scope -= -1
         # TODO
         return
+
+
+    def begin_new_arg_scope(self, token):
+        function_name = '_' + self.SS[-1]
+        self.arg_collector.append(function_name)
+        return
+
+    def collect_argument(self, token):
+        arg = self.SS[-1]
+        self.pop()
+        self.arg_collector.append(arg)
+        return
+
+
+    def call_function(self, token):
+        #TODO ADD a condition when function name is OUTPUT
+        index = 0
+        for i in reversed(range(len(self.arg_collector))):
+            if self.arg_collector[i][0] == '_':
+                index = i
+                break
+
+        arguments = self.arg_collector[index + 1:]
+        self.arg_collector = self.arg_collector[:index]
+        func_name = self.SS[-1]
+        self.pop()
+        function_scope = self.get_scope(func_name)
+        function_args = self.function_table[(func_name, function_scope)]['params']
+        if len(function_args) != len(arguments):
+            raise Exception('Fucked Up Function Call')
+        for arg1, arg2 in zip(arguments, function_args):
+            self.generate_code('ASSIGN', arg1, arg2)
+        function_addr = self.function_table[(func_name, function_scope)]['start_addr']
+        function_return_addr_var = self.function_table[(func_name, function_scope)]['return_addr']
+        function_return_value = self.function_table[(func_name, function_scope)]['return_value']
+        function_return_type= self.function_table[(func_name, function_scope)]['return_type']
+        #TODO check there might be a bug here, it should be tested
+        return_addr = self.PC + 2
+        self.generate_code('ASSIGN', return_addr, function_return_addr_var)
+        self.generate_code('JP', function_addr)
+        if function_return_type != 'void':
+            returned_value = self.get_temp()
+            self.generate_code('ASSIGN', function_return_value, returned_value)
+            self.SS.append(returned_value)
+        return
+
+
+
