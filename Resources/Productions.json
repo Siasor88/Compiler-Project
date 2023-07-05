@@ -65,7 +65,9 @@
         "#PIDN"
       ],
       [
-        "void"
+        "#PUSH_TYPE",
+        "void",
+        "#PIDN"
       ]
     ],
     "Params": [

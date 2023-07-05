@@ -62,8 +62,13 @@ class CodeGenerator:
             if i[0] == name:
                 candidates.append((i[3], i[2]))
         candidates.sort()
-        print(f"Candidates: {candidates}")
+        print(f"Candidates for {name}: {candidates}")
         return candidates[-1][1]
+
+    def get_scope(self, var_name):
+        for var in reversed(self.symbol_table):
+            if var_name == var[0]:
+                return var[3]
 
     def dec_var(self, next_token):
         name = self.SS[-1]
@@ -261,10 +266,11 @@ class CodeGenerator:
         start_addr = self.PC
         func_params = self.params
         function_name = self.SS[-1]
+
         if function_name == 'main':
             self.generate_code('JP', self.PC, loc=0)
-            self.PC += 1
         function_return_type = self.SS[-2]
+        self.pop(2)
         scope = self.current_scope
         function_return_value = self.get_temp()
         self.function_table[(function_name, scope)] = {
@@ -278,9 +284,9 @@ class CodeGenerator:
             'local_vars': []
         }
         #TODO: do we need to pop these?
-        #self.pop(2)
+
         self.current_function_name = function_name
-        # self.symbol_table.append([function_name, 'function', (function_name, scope), self.current_scope, -1])
+        self.symbol_table.append([function_name, 'function', (function_name, scope), self.current_scope, -1])
         return
 
     def create_new_return_scope(self, token):
@@ -301,8 +307,9 @@ class CodeGenerator:
         locations = self.return_states[last_scope + 1:]
         locations.append(self.PC)
         self.PC += 1
+        function_scope = self.get_scope(self.current_function_name)
         for j in locations:
-            self.generate_code('JP', self.function_table[(self.current_function_name, self.current_scope)]['return_addr'], loc=j)
+            self.generate_code('JP', self.function_table[(self.current_function_name, function_scope)]['return_addr'], loc=j)
         pass
 
     def add_param(self, token):
