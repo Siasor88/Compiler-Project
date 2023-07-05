@@ -15,6 +15,7 @@ def get_token_value(token: Token):
 
 class CodeGenerator:
     def __init__(self):
+        self.scope0_decelerations = []
         self.symbol_table = []
         self.break_states = []
         self.return_states = []
@@ -22,7 +23,7 @@ class CodeGenerator:
         self.current_scope = 0
         self.SS = list()
         self.PB = {}
-        self.PC = 1
+        self.PC = 2
         self.function_table = {}
         self.current_address = 500
         self.current_function_name = ''
@@ -135,6 +136,8 @@ class CodeGenerator:
         self.pop(2)
         tmp1, tmp2 = self.get_temp(), self.get_temp()
         self.generate_code('MULT', index, '#4', tmp1)
+        addr = int(array_address)
+        self.generate_code('ASSIGN', '#' + str(addr + 4), array_address )
         self.generate_code('ADD', tmp1, array_address, tmp2)
         print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
@@ -268,7 +271,8 @@ class CodeGenerator:
         function_name = self.SS[-1]
 
         if function_name == 'main':
-            self.generate_code('JP', self.PC, loc=0)
+            self.generate_code('ASSIGN', '#0', '0', loc=0)
+            self.generate_code('JP', self.PC, loc=1)
         function_return_type = self.SS[-2]
         self.pop(2)
         scope = self.current_scope
@@ -337,7 +341,7 @@ class CodeGenerator:
         for element in reversed(self.symbol_table):
             if element[3] == self.current_scope:
                 self.symbol_table.remove(element)
-                self.current_address -= element[4]
+                #self.current_address -= element[4]
         self.current_scope -= -1
         # TODO
         return
