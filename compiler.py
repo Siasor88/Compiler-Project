@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 
 from codegen import CodeGenerator
-from scanner import Scannerr, Token, SymbolTable, TokenType
+from Scanner import Scannerr, Token, SymbolTable, TokenType
 import json
 from anytree import Node, RenderTree
 
@@ -165,6 +165,8 @@ class Transition:
                 if token.string == 'output':
                     # print("DONE######")
                     return rule
+                else:
+                    continue
             if self.variable.value == 'Out_stmt' and token.string == 'output':
                 return rule
             if rule.appliable(token):
@@ -247,10 +249,11 @@ def main():
     # for rule in transitions['Expression'].rules:
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    test_cases = [str(i) for i in range(1,11)]
-    test_cases = ['4']
+    # test_cases = [str(i) for i in range(1,11)]
+    test_cases = ['1']
     for test_case in test_cases:
-        addr = './P3_testcases/T' + test_case + '/'
+        addr = './P4_testcases/T' + test_case + '/'
+        print("current test:",test_case)
         #addr = './'
         file = open(addr + 'input.txt', 'r')
         table = SymbolTable()
@@ -267,7 +270,7 @@ def main():
 
         while True:
             current_state = queue[0][0]
-            # print("current state",current_state)
+            print("current state",current_state)
             if type(current_state) != str:
                 current_state = current_state.value
             # if current state starts with # run the action

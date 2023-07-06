@@ -74,7 +74,7 @@
       [
         "#PUSH_TYPE",
         "int",
-        "#PID",
+        "#PIDN",
         "ID",
         "Param_prime",
         "Param_list"
@@ -386,7 +386,8 @@
       [
         "(",
         "Args",
-        ")"
+        ")",
+        "#CALL_FUNCTION"
       ],
       [
         "EPSILON"
