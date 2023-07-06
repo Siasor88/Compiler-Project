@@ -415,6 +415,7 @@
     "Arg_list": [
       [
         "Expression",
+        "#COLLECT_ARGUMENT",
         "Arg_list_prime"
       ]
     ],
@@ -422,6 +423,7 @@
       [
         ",",
         "Expression",
+        "#COLLECT_ARGUMENT",
         "Arg_list_prime"
       ],
       [

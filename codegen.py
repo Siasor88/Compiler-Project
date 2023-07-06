@@ -372,7 +372,6 @@ class CodeGenerator:
 
         arguments = self.arg_collector[index + 1:]
         self.arg_collector = self.arg_collector[:index]
-        self.pop(len(arguments))
         print("the stack is currently:", self.SS)
         func_name = self.SS[-1]
         self.pop()

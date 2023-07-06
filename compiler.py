@@ -270,7 +270,7 @@ def main():
 
         while True:
             current_state = queue[0][0]
-            print("current state",current_state)
+            # print("current state",current_state)
             if type(current_state) != str:
                 current_state = current_state.value
             # if current state starts with # run the action
