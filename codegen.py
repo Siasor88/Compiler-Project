@@ -24,7 +24,7 @@ class CodeGenerator:
         self.SS = list()
         self.PB = {}
         self.PC = 2
-        self.arg_collector = []
+        self.arg_collector = ['_']
         self.function_table = {}
         self.current_address = 500
         self.current_function_name = ''
@@ -301,6 +301,9 @@ class CodeGenerator:
 
     def save_return(self, token):
         self.return_states.append(self.PC)
+        #set the return value
+        self.generate_code('ASSIGN', self.SS[-1], self.function_table[(self.current_function_name, self.current_scope)]['return_value'])
+        self.PC += 1
         pass
 
     def fill_returns(self, token):
@@ -317,7 +320,7 @@ class CodeGenerator:
         self.PC += 1
         function_scope = self.get_scope(self.current_function_name)
         for j in locations:
-            self.generate_code('JP', self.function_table[(self.current_function_name, function_scope)]['return_addr'],
+            self.generate_code('JP', '@'+self.function_table[(self.current_function_name, function_scope)]['return_addr'],
                                loc=j)
         pass
 
@@ -360,13 +363,14 @@ class CodeGenerator:
         arg = self.SS[-1]
         self.pop()
         self.arg_collector.append(arg)
+        print("current collected args after this collection:", self.arg_collector)
         return
 
     def call_function(self, token):
         # TODO ADD a condition when function name is OUTPUT
         index = 0
         for i in reversed(range(len(self.arg_collector))):
-            if self.arg_collector[i][0] == '_':
+            if self.arg_collector[i] == '_':
                 index = i
                 break
 
@@ -376,19 +380,23 @@ class CodeGenerator:
         func_name = self.SS[-1]
         self.pop()
         function_scope = self.get_scope(func_name)
-        function_args = self.function_table[(func_name, function_scope)]['params']
+        function_args = self.function_table[func_name]['params']
         if len(function_args) != len(arguments):
+            print("function args:", function_args, "arguments:", arguments)
             raise Exception('Fucked Up Function Call')
         for arg1, arg2 in zip(arguments, function_args):
-            self.generate_code('ASSIGN', arg1, arg2)
-        function_addr = self.function_table[(func_name, function_scope)]['start_addr']
-        function_return_addr_var = self.function_table[(func_name, function_scope)]['return_addr']
-        function_return_value = self.function_table[(func_name, function_scope)]['return_value']
-        function_return_type = self.function_table[(func_name, function_scope)]['return_type']
+            adr_arg2 = arg2[2]
+            self.generate_code('ASSIGN', arg1, adr_arg2)
+        print("arguments were set")
+        function_addr = self.function_table[func_name]['start_addr']
+        function_return_addr_var = self.function_table[func_name]['return_addr']
+        function_return_value = self.function_table[func_name]['return_value']
+        function_return_type = self.function_table[func_name]['return_type']
         # TODO check there might be a bug here, it should be tested
         return_addr = self.PC + 2
-        self.generate_code('ASSIGN', return_addr, function_return_addr_var)
+        self.generate_code('ASSIGN', f'#{return_addr}', function_return_addr_var)
         self.generate_code('JP', function_addr)
+        self.arg_collector.append('_')
         if function_return_type != 'void':
             returned_value = self.get_temp()
             self.generate_code('ASSIGN', function_return_value, returned_value)
