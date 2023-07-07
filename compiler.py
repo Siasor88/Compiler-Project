@@ -250,7 +250,7 @@ def main():
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
     # test_cases = [str(i) for i in range(1,11)]
-    test_cases = ['2']
+    test_cases = ['1']
     for test_case in test_cases:
         addr = './P4_testcases/T' + test_case + '/'
         print("current test:",test_case)

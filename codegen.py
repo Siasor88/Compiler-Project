@@ -131,7 +131,8 @@ class CodeGenerator:
         return
 
     def pop_extra(self, token):
-        self.pop()
+        if len(self.SS):
+            self.pop()
         return
 
     def arr_acc(self, token):
@@ -302,7 +303,9 @@ class CodeGenerator:
     def save_return(self, token):
         self.return_states.append(self.PC)
         #set the return value
-        self.generate_code('ASSIGN', self.SS[-1], self.function_table[(self.current_function_name, self.current_scope)]['return_value'])
+        funct_scope = self.get_scope(self.current_function_name)
+        self.generate_code('ASSIGN', self.SS[-1], self.function_table[(self.current_function_name,funct_scope)]['return_value'])
+        self.pop()
         self.PC += 1
         pass
 
@@ -317,7 +320,7 @@ class CodeGenerator:
                 break
         locations = self.return_states[last_scope + 1:]
         locations.append(self.PC)
-        self.PC += 1
+        #self.PC += 1
         function_scope = self.get_scope(self.current_function_name)
         for j in locations:
             self.generate_code('JP', '@'+self.function_table[(self.current_function_name, function_scope)]['return_addr'],
