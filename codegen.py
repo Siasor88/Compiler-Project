@@ -1,4 +1,4 @@
-from scanner import SymbolTable, Token, TokenType
+from Scanner import SymbolTable, Token, TokenType
 
 variable_size = 4
 
@@ -24,7 +24,7 @@ class CodeGenerator:
         self.SS = list()
         self.PB = {}
         self.PC = 2
-        self.arg_collector = []
+        self.arg_collector = ['_']
         self.function_table = {}
         self.current_address = 500
         self.current_function_name = ''
@@ -53,19 +53,22 @@ class CodeGenerator:
         return start_address
 
     def get_address(self, name, scope=-1):
-        if scope == -1:
-            scope = self.current_scope
-        if name == 'output':
-            return 'output'
-        print(f"Current Symbol Table {self.symbol_table}")
-        print(f"Current Scope: {self.current_scope}")
-        candidates = []
-        for i in self.symbol_table:
-            if i[0] == name:
-                candidates.append((i[3], i[2]))
-        candidates.sort()
-        print(f"Candidates for {name}: {candidates}")
-        return candidates[-1][1]
+        try:
+            if scope == -1:
+                scope = self.current_scope
+            if name == 'output':
+                return 'output'
+            print(f"Current Symbol Table {self.symbol_table}")
+            print(f"Current Scope: {self.current_scope}")
+            candidates = []
+            for i in self.symbol_table:
+                if i[0] == name:
+                    candidates.append((i[3], i[2]))
+            candidates.sort()
+            print(f"Candidates for {name}: {candidates}")
+            return candidates[-1][1]
+        except:
+            "bega raftim"
 
     def get_scope(self, var_name):
         for var in reversed(self.symbol_table):
@@ -138,7 +141,7 @@ class CodeGenerator:
         tmp1, tmp2 = self.get_temp(), self.get_temp()
         self.generate_code('MULT', index, '#4', tmp1)
         addr = int(array_address)
-        self.generate_code('ASSIGN', '#' + str(addr + 4), array_address )
+        self.generate_code('ASSIGN', '#' + str(addr + 4), array_address)
         self.generate_code('ADD', tmp1, array_address, tmp2)
         print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
@@ -288,8 +291,6 @@ class CodeGenerator:
             'scope': scope,
             'local_vars': []
         }
-        #TODO: do we need to pop these?
-
         self.current_function_name = function_name
         self.symbol_table.append([function_name, 'function', (function_name, scope), self.current_scope, -1])
         return
@@ -300,10 +301,15 @@ class CodeGenerator:
 
     def save_return(self, token):
         self.return_states.append(self.PC)
+        #set the return value
+        self.generate_code('ASSIGN', self.SS[-1], self.function_table[(self.current_function_name, self.current_scope)]['return_value'])
+        self.PC += 1
         pass
 
     def fill_returns(self, token):
-        #find the last "new-scope" in return states
+        if self.current_function_name == 'main':
+            return
+        # find the last "new-scope" in return states
         last_scope = 0
         for i in reversed(range(len(self.return_states))):
             if self.return_states[i] == "new_scope":
@@ -314,7 +320,8 @@ class CodeGenerator:
         self.PC += 1
         function_scope = self.get_scope(self.current_function_name)
         for j in locations:
-            self.generate_code('JP', self.function_table[(self.current_function_name, function_scope)]['return_addr'], loc=j)
+            self.generate_code('JP', '@'+self.function_table[(self.current_function_name, function_scope)]['return_addr'],
+                               loc=j)
         pass
 
     def add_param(self, token):
@@ -342,11 +349,10 @@ class CodeGenerator:
         for element in reversed(self.symbol_table):
             if element[3] == self.current_scope:
                 self.symbol_table.remove(element)
-                #self.current_address -= element[4]
-        self.current_scope -= -1
+                # self.current_address -= element[4]
+        self.current_scope -= 1
         # TODO
         return
-
 
     def begin_new_arg_scope(self, token):
         function_name = '_' + self.SS[-1]
@@ -357,40 +363,42 @@ class CodeGenerator:
         arg = self.SS[-1]
         self.pop()
         self.arg_collector.append(arg)
+        print("current collected args after this collection:", self.arg_collector)
         return
 
-
     def call_function(self, token):
-        #TODO ADD a condition when function name is OUTPUT
+        # TODO ADD a condition when function name is OUTPUT
         index = 0
         for i in reversed(range(len(self.arg_collector))):
-            if self.arg_collector[i][0] == '_':
+            if self.arg_collector[i] == '_':
                 index = i
                 break
 
         arguments = self.arg_collector[index + 1:]
         self.arg_collector = self.arg_collector[:index]
+        print("the stack is currently:", self.SS)
         func_name = self.SS[-1]
         self.pop()
         function_scope = self.get_scope(func_name)
-        function_args = self.function_table[(func_name, function_scope)]['params']
+        function_args = self.function_table[func_name]['params']
         if len(function_args) != len(arguments):
+            print("function args:", function_args, "arguments:", arguments)
             raise Exception('Fucked Up Function Call')
         for arg1, arg2 in zip(arguments, function_args):
-            self.generate_code('ASSIGN', arg1, arg2)
-        function_addr = self.function_table[(func_name, function_scope)]['start_addr']
-        function_return_addr_var = self.function_table[(func_name, function_scope)]['return_addr']
-        function_return_value = self.function_table[(func_name, function_scope)]['return_value']
-        function_return_type= self.function_table[(func_name, function_scope)]['return_type']
-        #TODO check there might be a bug here, it should be tested
+            adr_arg2 = arg2[2]
+            self.generate_code('ASSIGN', arg1, adr_arg2)
+        print("arguments were set")
+        function_addr = self.function_table[func_name]['start_addr']
+        function_return_addr_var = self.function_table[func_name]['return_addr']
+        function_return_value = self.function_table[func_name]['return_value']
+        function_return_type = self.function_table[func_name]['return_type']
+        # TODO check there might be a bug here, it should be tested
         return_addr = self.PC + 2
-        self.generate_code('ASSIGN', return_addr, function_return_addr_var)
+        self.generate_code('ASSIGN', f'#{return_addr}', function_return_addr_var)
         self.generate_code('JP', function_addr)
+        self.arg_collector.append('_')
         if function_return_type != 'void':
             returned_value = self.get_temp()
             self.generate_code('ASSIGN', function_return_value, returned_value)
             self.SS.append(returned_value)
         return
-
-
-
