@@ -300,10 +300,16 @@ class CodeGenerator:
         return
 
     def save_return(self, token):
-        self.return_states.append(self.PC)
-        #set the return value
-        self.generate_code('ASSIGN', self.SS[-1], self.function_table[(self.current_function_name, self.current_scope)]['return_value'])
-        self.PC += 1
+        # set the return value
+        # print("current function table", self.function_table)
+        #if the current function type is void, push dummy 0
+        if self.function_table[(self.current_function_name, 0)]['return_type'] == 'void':
+            self.SS.append(0)
+        self.generate_code('ASSIGN', self.SS[-1],
+                           self.function_table[(self.current_function_name, 0)]['return_value'],loc=self.PC)
+        self.pop()
+        self.return_states.append(self.PC+1)
+        self.PC += 2
         pass
 
     def fill_returns(self, token):
@@ -320,7 +326,8 @@ class CodeGenerator:
         self.PC += 1
         function_scope = self.get_scope(self.current_function_name)
         for j in locations:
-            self.generate_code('JP', '@'+self.function_table[(self.current_function_name, function_scope)]['return_addr'],
+            self.generate_code('JP',
+                               '@' + self.function_table[(self.current_function_name, function_scope)]['return_addr'],
                                loc=j)
         pass
 
@@ -368,6 +375,7 @@ class CodeGenerator:
 
     def call_function(self, token):
         # TODO ADD a condition when function name is OUTPUT
+        # print("all functions:", self.function_table)
         index = 0
         for i in reversed(range(len(self.arg_collector))):
             if self.arg_collector[i] == '_':
@@ -401,4 +409,6 @@ class CodeGenerator:
             returned_value = self.get_temp()
             self.generate_code('ASSIGN', function_return_value, returned_value)
             self.SS.append(returned_value)
+        else:
+            self.SS.append(0)
         return

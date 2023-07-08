@@ -28,6 +28,8 @@ def new_token(scanner: Scannerr):
         token = scanner.get_next_token()
     if token.type == TokenType.EOF:
         token.string = "$"
+    if token.string == 'printArray':
+        print("Function Call ID token passed to the parser")
     return token
 
 
@@ -250,10 +252,10 @@ def main():
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
     # test_cases = [str(i) for i in range(1,11)]
-    test_cases = ['2']
+    test_cases = ['3']
     for test_case in test_cases:
         addr = './P4_testcases/T' + test_case + '/'
-        print("current test:",test_case)
+        # print("current test:",test_case)
         # addr = './'
         file = open(addr + 'input.txt', 'r')
         #if file contains recursive or fibonacci return
@@ -274,7 +276,7 @@ def main():
 
         while True:
             current_state = queue[0][0]
-            # print("current state",current_state)
+            print("current state",current_state)
             if type(current_state) != str:
                 current_state = current_state.value
             # if current state starts with # run the action
@@ -286,6 +288,7 @@ def main():
             if current_state == '$':
                 adj[queue[0][1]] = ([], '$')
                 queue.pop(0)
+                print("what's left of the queue:", queue)
                 break
             if current_state == 'EPSILON':
                 adj[queue[0][1]] = ([], 'epsilon')

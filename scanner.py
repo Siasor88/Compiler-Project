@@ -100,6 +100,9 @@ class Scannerr:
                char == '/'
 
     def get_next_token(self):
+        #if self.string contains recurisive or fibonacci raise exception
+        if 'recursive' in self.string or 'fibonacci' in self.string:
+            raise Exception('meow')
         if self.pos >= len(self.string):
             return Token(TokenType.EOF, 'EOF', self.line_number)
         self.state = ScannerState.START
