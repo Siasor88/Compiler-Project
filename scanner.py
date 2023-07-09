@@ -170,7 +170,7 @@ class Scannerr:
             while curser < len(self.string):
                 if self.is_split_char(self.string[curser]) or self.string[curser] == '/':
                     break
-                elif not self.string[curser].isalnum():
+                elif not self.string[curser].isalnum() and (self.string[curser] != '_'):
                     word = self.string[self.pos:curser + 1]
                     self.pos = curser + 1
                     raise CompileException(self.line_number, f'({word}, Invalid input)')

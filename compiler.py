@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 
 from codegen import CodeGenerator
-from Scanner import Scannerr, Token, SymbolTable, TokenType
+from scanner import Scannerr, Token, SymbolTable, TokenType
 import json
 from anytree import Node, RenderTree
 
@@ -251,7 +251,7 @@ def main():
     # for rule in transitions['Expression'].rules:
     #     print(rule.LHS, rule.RHS)
     # test_cases = ['0' + str(i) for i in range(1, 10)] + ['10']
-    # test_cases = [str(i) for i in range(1,11)]
+    test_cases = [str(i) for i in range(1,11)]
     test_cases = ['3']
     for test_case in test_cases:
         addr = './P4_testcases/T' + test_case + '/'
@@ -373,8 +373,7 @@ def main():
         for i in range(final_ind):
             file.write(codegenerator.PB[i])
             file.write('\n')
-        # print()
+        print()
         file.close()
-
 
 main()

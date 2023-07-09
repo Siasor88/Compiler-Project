@@ -1,4 +1,4 @@
-from Scanner import SymbolTable, Token, TokenType
+from scanner import SymbolTable, Token, TokenType
 
 variable_size = 4
 
@@ -24,6 +24,8 @@ class CodeGenerator:
         self.SS = list()
         self.PB = {}
         self.PC = 2
+        self.array_dec_stalled = []
+
         self.arg_collector = ['_']
         self.function_table = {}
         self.current_address = 500
@@ -92,6 +94,8 @@ class CodeGenerator:
         array_mem = self.get_temp(int(size))
         self.generate_code('ASSIGN', f'#{array_mem}', address)
         self.symbol_table.append([name, 'array', address, self.current_scope, size * variable_size])
+        if self.current_scope == 0:
+            self.array_dec_stalled.append(('ASSIGN', f'#{array_mem}', address))
         return
 
     def mul(self, token):
@@ -136,17 +140,17 @@ class CodeGenerator:
 
     def arr_acc(self, token):
         index = self.SS[-1]
-        array_address = self.SS[-2]
+        array_symbol_address = self.SS[-2]
         self.pop(2)
         tmp1, tmp2 = self.get_temp(), self.get_temp()
         self.generate_code('MULT', index, '#4', tmp1)
-        addr = int(array_address)
-        self.generate_code('ASSIGN', '#' + str(addr + 4), array_address)
-        self.generate_code('ADD', tmp1, array_address, tmp2)
+        # addr = self.array_table[array_symbol_address]
+        # self.generate_code('ASSIGN', '#' + str(addr), array_symbol_address)
+        self.generate_code('ADD', tmp1, array_symbol_address, tmp2)
         print(f'Pushed to Stack at function arr_acc value: @{tmp2}')
         self.SS.append(f'@{tmp2}')
         print("Stack after this push:", self.SS)
-        pass
+
 
     def pushop(self, token):
         token_value = get_token_value(token)
@@ -197,6 +201,7 @@ class CodeGenerator:
     def output(self, token):
         expression = self.SS[-1]
         self.pop()
+
         self.generate_code('PRINT', expression)
         return
 
@@ -277,6 +282,8 @@ class CodeGenerator:
         if function_name == 'main':
             self.generate_code('ASSIGN', '#0', '0', loc=0)
             self.generate_code('JP', self.PC, loc=1)
+            for stalled_dec in self.array_dec_stalled:
+                self.generate_code(*stalled_dec)
         function_return_type = self.SS[-2]
         self.pop(2)
         scope = self.current_scope
@@ -322,6 +329,7 @@ class CodeGenerator:
                 last_scope = i
                 break
         locations = self.return_states[last_scope + 1:]
+        self.return_states = self.return_states[:last_scope]
         locations.append(self.PC)
         self.PC += 1
         function_scope = self.get_scope(self.current_function_name)
